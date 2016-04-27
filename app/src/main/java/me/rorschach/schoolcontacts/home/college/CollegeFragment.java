@@ -1,6 +1,7 @@
 package me.rorschach.schoolcontacts.home.college;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,7 +9,10 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +21,7 @@ import butterknife.ButterKnife;
 import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.R;
 
-public class CollegeFragment extends Fragment implements CollegeContract.View{
+public class CollegeFragment extends Fragment implements CollegeContract.View {
 
 
     @Bind(R.id.rv_college)
@@ -55,7 +59,8 @@ public class CollegeFragment extends Fragment implements CollegeContract.View{
         mRvCollege.setHasFixedSize(true);
 
         mColleges = new ArrayList<>();
-        mCollegeAdapter = new CollegeAdapter(mColleges);// TODO: 16-4-25
+        WeakReference<Activity> reference = new WeakReference<Activity>(getActivity());
+        mCollegeAdapter = new CollegeAdapter(reference, mColleges);// TODO: 16-4-25
         mRvCollege.setAdapter(mCollegeAdapter);
     }
 
@@ -108,22 +113,26 @@ public class CollegeFragment extends Fragment implements CollegeContract.View{
         return isAdded();
     }
 
-    private static class CollegeAdapter extends RecyclerView.Adapter<CollegeAdapter.CollegeHolder> {
+    public static class CollegeAdapter extends RecyclerView.Adapter<CollegeAdapter.CollegeHolder> {
 
+        private Activity mActivity;
         private List<String> colleges;
 
-        public CollegeAdapter(List<String> colleges) {
+        public CollegeAdapter(WeakReference<Activity> reference, List<String> colleges) {
+            mActivity = reference.get();
             this.colleges = colleges;
         }
 
         @Override
         public CollegeHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return null;
+            final View view = mActivity.getLayoutInflater().inflate(R.layout.item_college, parent, false);
+            return new CollegeHolder(view);
         }
 
         @Override
         public void onBindViewHolder(CollegeHolder holder, int position) {
-
+            String college = colleges.get(position);
+            holder.mTvCollege.setText(college);
         }
 
         @Override
@@ -131,9 +140,21 @@ public class CollegeFragment extends Fragment implements CollegeContract.View{
             return colleges.size();
         }
 
-        class CollegeHolder extends RecyclerView.ViewHolder {
+        class CollegeHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+
+            @Bind(R.id.tv_college)
+            TextView mTvCollege;
+
             public CollegeHolder(View itemView) {
                 super(itemView);
+                ButterKnife.bind(this, itemView);
+
+                itemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(mActivity, "position:" + getAdapterPosition(), Toast.LENGTH_SHORT).show();
             }
         }
 

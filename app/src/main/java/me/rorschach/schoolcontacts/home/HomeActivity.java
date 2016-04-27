@@ -1,6 +1,5 @@
 package me.rorschach.schoolcontacts.home;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
@@ -12,20 +11,30 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
+import android.widget.Toast;
+
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.HistoryRepository;
+import me.rorschach.schoolcontacts.data.local.Contact;
 import me.rorschach.schoolcontacts.home.college.CollegeFragment;
 import me.rorschach.schoolcontacts.home.college.CollegePresenter;
 import me.rorschach.schoolcontacts.home.history.HistoryFragment;
 import me.rorschach.schoolcontacts.home.history.HistoryPresenter;
 import me.rorschach.schoolcontacts.home.star.StarFragment;
 import me.rorschach.schoolcontacts.home.star.StarPresenter;
-import me.rorschach.schoolcontacts.search.SearchActivity;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
+import rx.schedulers.Schedulers;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -58,6 +67,8 @@ public class HomeActivity extends AppCompatActivity {
 
     private void initView() {
 
+        mToolbar.inflateMenu(R.menu.menu_search);
+
         mCollegeFragment = CollegeFragment.newInstance();
         mHistoryFragment = HistoryFragment.newInstance();
         mStarFragment = StarFragment.newInstance();
@@ -77,9 +88,66 @@ public class HomeActivity extends AppCompatActivity {
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+                test();
             }
         });
+    }
+
+    private void test() {
+//        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+
+        rx.Observable
+                .create(new rx.Observable.OnSubscribe<List<Contact>>() {
+                    @Override
+                    public void call(Subscriber<? super List<Contact>> subscriber) {
+//                        XmlPullParser xpp = getResources().getXml(R.xml.gnnu);
+//                        List<Contact> contacts = IOUtil.parseXml(xpp);
+                        ContactRepository repository = ContactRepository.getInstance();
+//
+                        List<Contact> contacts = repository.searchByKey("朱");
+                        subscriber.onNext(contacts);
+                        subscriber.onCompleted();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        Toast.makeText(HomeActivity.this, "start...", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .subscribeOn(AndroidSchedulers.mainThread())
+
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<Contact>>() {
+                    @Override
+                    public void onCompleted() {
+                        Toast.makeText(HomeActivity.this, "success!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Toast.makeText(HomeActivity.this, "failed!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(List<Contact> contacts) {
+                        Log.d("TAG", "size : " + contacts.toString());
+//                        Log.d("TAG", contacts.get(0).toString()
+//                                + ", " + contacts.get(contacts.size() - 1).toString());
+                    }
+                });
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        final MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_search, menu);
+
+        return super.onCreateOptionsMenu(menu);
     }
 
     public static class PagerAdapter extends FragmentPagerAdapter {

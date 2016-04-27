@@ -5,11 +5,13 @@ import com.raizlabs.android.dbflow.annotation.PrimaryKey;
 import com.raizlabs.android.dbflow.annotation.Table;
 import com.raizlabs.android.dbflow.structure.BaseModel;
 
+import java.io.Serializable;
+
 /**
  * Created by lei on 16-4-10.
  */
 @Table(database = ContactDatabase.class)
-public class Contact extends BaseModel {
+public class Contact extends BaseModel implements Serializable{
 
     @Column
     @PrimaryKey(autoincrement = true)
@@ -26,6 +28,17 @@ public class Contact extends BaseModel {
 
     @Column
     Boolean stared;
+
+    @Override
+    public String toString() {
+        return "Contact{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", phone='" + phone + '\'' +
+                ", college='" + college + '\'' +
+                ", stared=" + stared +
+                "}\n";
+    }
 
     public long getId() {
         return id;

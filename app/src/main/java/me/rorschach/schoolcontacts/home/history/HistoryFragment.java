@@ -122,7 +122,7 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
     }
 
 
-    private static class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryHolder> {
+    public static class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryHolder> {
 
         private List<History> mHistories;
 

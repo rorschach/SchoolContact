@@ -2,10 +2,16 @@ package me.rorschach.schoolcontacts.search;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -14,6 +20,7 @@ import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.local.Contact;
 
@@ -44,6 +51,15 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
 
     private void initView() {
 
+        mToolbar.inflateMenu(R.menu.menu_search);
+        mToolbar.setPopupTheme(R.style.AppTheme_ToolBar);
+
+        setSupportActionBar(mToolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mRvSearch.setLayoutManager(layoutManager);
         mRvSearch.setHasFixedSize(true);
@@ -70,6 +86,47 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        final MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_search, menu);
+
+        final MenuItem menuItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) menuItem.getActionView();
+
+        if (searchView != null) {
+            searchView.setIconifiedByDefault(true);
+            searchView.setQueryHint(Html.fromHtml("<font color = #ffffff>" + "查询" + "</font>"));
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                @DebugLog
+                public boolean onQueryTextSubmit(String query) {
+                    return true;
+                }
+
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    return true;
+                }
+            });
+
+            MenuItemCompat.expandActionView(menuItem);
+            MenuItemCompat.setOnActionExpandListener(menuItem, new MenuItemCompat.OnActionExpandListener() {
+                @Override
+                public boolean onMenuItemActionExpand(MenuItem item) {
+                    return true;
+                }
+
+                @Override
+                public boolean onMenuItemActionCollapse(MenuItem item) {
+                    onBackPressed();
+                    return true;
+                }
+            });
+        }
+
+        return super.onCreateOptionsMenu(menu);
+    }
     @Override
     public void setLoadingIndicator(boolean active) {
 

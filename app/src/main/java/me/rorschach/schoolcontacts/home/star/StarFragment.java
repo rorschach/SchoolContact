@@ -119,7 +119,7 @@ public class StarFragment extends Fragment implements StarContract.View {
         return isAdded();
     }
 
-    private static class StarAdapter extends RecyclerView.Adapter<StarAdapter.StarHolder> {
+    public static class StarAdapter extends RecyclerView.Adapter<StarAdapter.StarHolder> {
 
         private List<Contact> mStared;
 

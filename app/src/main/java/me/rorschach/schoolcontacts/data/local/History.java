@@ -29,6 +29,17 @@ public class History extends BaseModel {
     @Column(typeConverter = DateTimeConverter.class)
     DateTime endTime;
 
+    @Override
+    public String toString() {
+        return "History{" +
+                "id=" + id +
+                ", contactsId=" + contactsId +
+                ", contactType=" + contactType +
+                ", beginTime=" + beginTime +
+                ", endTime=" + endTime +
+                "}\n";
+    }
+
     public long getId() {
         return id;
     }

@@ -88,4 +88,12 @@ public class ContactRepository implements Repository<Contact> {
                 .where(Contact_Table.id.eq(history.getContactsId()))
                 .querySingle();
     }
+
+    public List<Contact> searchByKey(String keyword) {
+        return SQLite.select()
+                .from(Contact.class)
+                .where(Contact_Table.name.like("%" +keyword + "%"))
+                .or(Contact_Table.phone.like("%" +keyword + "%"))
+                .queryList();
+    }
 }
