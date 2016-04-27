@@ -72,4 +72,5 @@ public class HistoryRepository implements Repository<History> {
     public List<History> loadAll() {
         return SQLite.select().from(History.class).queryList();
     }
+
 }

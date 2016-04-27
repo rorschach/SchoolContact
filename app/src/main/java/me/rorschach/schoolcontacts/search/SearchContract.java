@@ -13,9 +13,13 @@ public interface SearchContract {
 
     interface View extends BaseView<Presenter> {
 
-        void loadSearchResult(List<Contact> contacts);
+        void setLoadingIndicator(boolean active);
 
-        void inActive();
+        void showSearchResult(List<Contact> contacts);
+
+        void showNoResult();
+
+        boolean isActive();
     }
 
     interface Presenter extends BasePresenter{

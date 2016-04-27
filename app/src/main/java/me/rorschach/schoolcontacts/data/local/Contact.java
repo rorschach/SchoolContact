@@ -11,6 +11,7 @@ import com.raizlabs.android.dbflow.structure.BaseModel;
 @Table(database = ContactDatabase.class)
 public class Contact extends BaseModel {
 
+    @Column
     @PrimaryKey(autoincrement = true)
     long id;
 

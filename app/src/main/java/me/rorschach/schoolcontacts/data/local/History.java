@@ -13,11 +13,11 @@ import org.joda.time.DateTime;
 @Table(database = HistoryDatabase.class)
 public class History extends BaseModel {
 
+    @Column
     @PrimaryKey(autoincrement = true)
     long id;
 
     @Column
-//    @ForeignKey(saveForeignKeyModel = false)
     long contactsId;
 
     @Column(typeConverter = ContactTypeConverter.class)

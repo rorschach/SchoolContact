@@ -8,6 +8,7 @@ import java.util.List;
 
 import me.rorschach.schoolcontacts.data.local.Contact;
 import me.rorschach.schoolcontacts.data.local.Contact_Table;
+import me.rorschach.schoolcontacts.data.local.History;
 
 /**
  * Created by lei on 16-4-10.
@@ -79,5 +80,12 @@ public class ContactRepository implements Repository<Contact> {
                 .where(Contact_Table.stared.eq(true))
                 .queryList();
 //        return null;
+    }
+
+    public Contact getContactByHistory(History history) {
+        return SQLite.select()
+                .from(Contact.class)
+                .where(Contact_Table.id.eq(history.getContactsId()))
+                .querySingle();
     }
 }

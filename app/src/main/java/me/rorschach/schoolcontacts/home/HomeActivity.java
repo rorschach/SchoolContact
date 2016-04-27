@@ -1,5 +1,6 @@
 package me.rorschach.schoolcontacts.home;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
@@ -11,6 +12,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -23,6 +25,7 @@ import me.rorschach.schoolcontacts.home.history.HistoryFragment;
 import me.rorschach.schoolcontacts.home.history.HistoryPresenter;
 import me.rorschach.schoolcontacts.home.star.StarFragment;
 import me.rorschach.schoolcontacts.home.star.StarPresenter;
+import me.rorschach.schoolcontacts.search.SearchActivity;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -70,6 +73,13 @@ public class HomeActivity extends AppCompatActivity {
         HistoryPresenter historyPresenter = new HistoryPresenter(HistoryRepository.getInstance(), mHistoryFragment);
         CollegePresenter collegePresenter = new CollegePresenter(ContactRepository.getInstance(), mCollegeFragment);
         StarPresenter starPresenter = new StarPresenter(ContactRepository.getInstance(), mStarFragment);
+
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+            }
+        });
     }
 
     public static class PagerAdapter extends FragmentPagerAdapter {
