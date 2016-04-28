@@ -17,6 +17,11 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Toast;
 
+import com.raizlabs.android.dbflow.sql.language.SQLite;
+
+import org.joda.time.DateTime;
+import org.xmlpull.v1.XmlPullParser;
+
 import java.util.List;
 
 import butterknife.Bind;
@@ -25,12 +30,16 @@ import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.HistoryRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
+import me.rorschach.schoolcontacts.data.local.ContactType;
+import me.rorschach.schoolcontacts.data.local.History;
 import me.rorschach.schoolcontacts.home.college.CollegeFragment;
 import me.rorschach.schoolcontacts.home.college.CollegePresenter;
 import me.rorschach.schoolcontacts.home.history.HistoryFragment;
 import me.rorschach.schoolcontacts.home.history.HistoryPresenter;
 import me.rorschach.schoolcontacts.home.star.StarFragment;
 import me.rorschach.schoolcontacts.home.star.StarPresenter;
+import me.rorschach.schoolcontacts.util.IOUtil;
+import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
@@ -65,6 +74,8 @@ public class HomeActivity extends AppCompatActivity {
         initView();
     }
 
+    CollegePresenter collegePresenter;
+
     private void initView() {
 
         mToolbar.inflateMenu(R.menu.menu_search);
@@ -82,7 +93,7 @@ public class HomeActivity extends AppCompatActivity {
         mTabs.setupWithViewPager(mContainer);
 
         HistoryPresenter historyPresenter = new HistoryPresenter(HistoryRepository.getInstance(), mHistoryFragment);
-        CollegePresenter collegePresenter = new CollegePresenter(ContactRepository.getInstance(), mCollegeFragment);
+        collegePresenter = new CollegePresenter(ContactRepository.getInstance(), mCollegeFragment);
         StarPresenter starPresenter = new StarPresenter(ContactRepository.getInstance(), mStarFragment);
 
         mFab.setOnClickListener(new View.OnClickListener() {
@@ -96,15 +107,65 @@ public class HomeActivity extends AppCompatActivity {
     private void test() {
 //        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
 
-        rx.Observable
-                .create(new rx.Observable.OnSubscribe<List<Contact>>() {
+//        testContact();
+
+//        testHistory();
+    }
+
+    private void testHistory() {
+
+        Observable
+                .create(new Observable.OnSubscribe<List<History>>() {
+                    @Override
+                    public void call(Subscriber<? super List<History>> subscriber) {
+
+                        DateTime dateTime = new DateTime();
+
+                        History history = new History();
+                        history.setContactsId(1);
+                        history.setContactType(ContactType.PHONE);
+                        history.setBeginTime(dateTime);
+                        history.setEndTime(dateTime);
+                        history.save();
+
+                        List<History> histories =  SQLite.select().from(History.class).queryList();
+
+                        subscriber.onNext(histories);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<History>>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onNext(List<History> histories) {
+                        Log.d("TAG", histories.toString());
+                    }
+                });
+    }
+
+    private void testContact() {
+        Observable
+                .create(new Observable.OnSubscribe<List<Contact>>() {
                     @Override
                     public void call(Subscriber<? super List<Contact>> subscriber) {
-//                        XmlPullParser xpp = getResources().getXml(R.xml.gnnu);
-//                        List<Contact> contacts = IOUtil.parseXml(xpp);
+                        XmlPullParser xpp = getResources().getXml(R.xml.gnnu);
                         ContactRepository repository = ContactRepository.getInstance();
-//
-                        List<Contact> contacts = repository.searchByKey("朱");
+
+                        List<Contact> contacts = IOUtil.parseXml(xpp);
+                        repository.saveAll(contacts);
+
+//                        List<Contact> contacts = repository.searchByKey("黄小平");
+
                         subscriber.onNext(contacts);
                         subscriber.onCompleted();
                     }
@@ -114,7 +175,7 @@ public class HomeActivity extends AppCompatActivity {
                 .doOnSubscribe(new Action0() {
                     @Override
                     public void call() {
-                        Toast.makeText(HomeActivity.this, "start...", Toast.LENGTH_LONG).show();
+                        Toast.makeText(HomeActivity.this, "start...", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .subscribeOn(AndroidSchedulers.mainThread())
@@ -128,17 +189,16 @@ public class HomeActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Throwable e) {
-                        Toast.makeText(HomeActivity.this, "failed!", Toast.LENGTH_SHORT).show();
+                        Log.d("TAG", e.getMessage());
+                        Toast.makeText(HomeActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onNext(List<Contact> contacts) {
-                        Log.d("TAG", "size : " + contacts.toString());
-//                        Log.d("TAG", contacts.get(0).toString()
-//                                + ", " + contacts.get(contacts.size() - 1).toString());
+                        Log.d("TAG", "size : " + contacts.size());
+                        collegePresenter.loadColleges();
                     }
                 });
-
     }
 
     @Override

@@ -1,6 +1,8 @@
 package me.rorschach.schoolcontacts.data.local;
 
 import com.raizlabs.android.dbflow.annotation.Column;
+import com.raizlabs.android.dbflow.annotation.Index;
+import com.raizlabs.android.dbflow.annotation.IndexGroup;
 import com.raizlabs.android.dbflow.annotation.PrimaryKey;
 import com.raizlabs.android.dbflow.annotation.Table;
 import com.raizlabs.android.dbflow.structure.BaseModel;
@@ -10,16 +12,23 @@ import java.io.Serializable;
 /**
  * Created by lei on 16-4-10.
  */
-@Table(database = ContactDatabase.class)
-public class Contact extends BaseModel implements Serializable{
+@Table(database = ContactDatabase.class,
+        indexGroups = {
+                @IndexGroup(number = 1, name = "nameIndex"),
+                @IndexGroup(number = 2, name = "phoneIndex"),
+        })
+public class Contact extends BaseModel implements Serializable {
 
+    @Index
     @Column
     @PrimaryKey(autoincrement = true)
     long id;
 
+    @Index(indexGroups = 1)
     @Column
     String name;
 
+    @Index(indexGroups = 2)
     @Column
     String phone;
 

@@ -68,7 +68,11 @@ public class StarPresenter implements StarContract.Presenter {
                     @Override
                     public void onNext(List<Contact> stared) {
                         if (mView.isActive()) {
-                            mView.showStars(stared);
+                            if (stared.isEmpty()) {
+                                mView.showNoStar();
+                            } else {
+                                mView.showStars(stared);
+                            }
                         }
                     }
                 });

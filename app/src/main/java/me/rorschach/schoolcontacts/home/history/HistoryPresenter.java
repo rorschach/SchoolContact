@@ -66,9 +66,13 @@ public class HistoryPresenter implements HistoryContract.Presenter {
                                }
 
                                @Override
-                               public void onNext(List<History> strings) {
+                               public void onNext(List<History> histories) {
                                    if (mView.isActive()) {
-                                       mView.showHistories(strings);
+                                       if (histories.isEmpty()) {
+                                           mView.showNoHistory();
+                                       } else {
+                                           mView.showHistories(histories);
+                                       }
                                    }
                                }
                            }

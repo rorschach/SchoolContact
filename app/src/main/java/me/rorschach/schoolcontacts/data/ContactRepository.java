@@ -1,11 +1,15 @@
 package me.rorschach.schoolcontacts.data;
 
+import com.raizlabs.android.dbflow.runtime.TransactionManager;
+import com.raizlabs.android.dbflow.runtime.transaction.process.ProcessModelInfo;
+import com.raizlabs.android.dbflow.runtime.transaction.process.SaveModelTransaction;
 import com.raizlabs.android.dbflow.sql.language.Condition;
 import com.raizlabs.android.dbflow.sql.language.SQLite;
 import com.raizlabs.android.dbflow.sql.language.Select;
 
 import java.util.List;
 
+import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.data.local.Contact;
 import me.rorschach.schoolcontacts.data.local.Contact_Table;
 import me.rorschach.schoolcontacts.data.local.History;
@@ -18,7 +22,7 @@ public class ContactRepository implements Repository<Contact> {
     private static ContactRepository INSTANCE;
 
     public static ContactRepository getInstance() {
-        INSTANCE =  ContactRepositoryHolder.REPOSITORY;
+        INSTANCE = ContactRepositoryHolder.REPOSITORY;
         return INSTANCE;
     }
 
@@ -26,9 +30,10 @@ public class ContactRepository implements Repository<Contact> {
         INSTANCE = null;
     }
 
-    private ContactRepository(){}
+    private ContactRepository() {
+    }
 
-    private static class ContactRepositoryHolder{
+    private static class ContactRepositoryHolder {
         public static final ContactRepository REPOSITORY = new ContactRepository();
     }
 
@@ -59,7 +64,7 @@ public class ContactRepository implements Repository<Contact> {
     }
 
     @Override
-    public Contact querySingle(Class<Contact> clz,Condition... conditions) {
+    public Contact querySingle(Class<Contact> clz, Condition... conditions) {
         return SQLite.select().from(clz).where(conditions).querySingle();
     }
 
@@ -68,9 +73,16 @@ public class ContactRepository implements Repository<Contact> {
         return SQLite.select().from(clz).where(conditions).queryList();
     }
 
+    @DebugLog
+    public void saveAll(List<Contact> contacts) {
+        TransactionManager.getInstance()
+                .addTransaction(
+                        new SaveModelTransaction<>(
+                                ProcessModelInfo.withModels(contacts)));
+    }
+
     public List<Contact> loadAllColleges() {
         return new Select(Contact_Table.college).distinct().from(Contact.class).queryList();
-//        return null;
     }
 
     public List<Contact> loadAllStared() {
@@ -79,7 +91,6 @@ public class ContactRepository implements Repository<Contact> {
                 .from(Contact.class)
                 .where(Contact_Table.stared.eq(true))
                 .queryList();
-//        return null;
     }
 
     public Contact getContactByHistory(History history) {
@@ -89,11 +100,13 @@ public class ContactRepository implements Repository<Contact> {
                 .querySingle();
     }
 
+    @DebugLog
     public List<Contact> searchByKey(String keyword) {
+
         return SQLite.select()
                 .from(Contact.class)
-                .where(Contact_Table.name.like("%" +keyword + "%"))
-                .or(Contact_Table.phone.like("%" +keyword + "%"))
+                .where(Contact_Table.name.like("%" + keyword + "%"))
+                .or(Contact_Table.phone.like("%" + keyword + "%"))
                 .queryList();
     }
 }

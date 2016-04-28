@@ -41,6 +41,7 @@ public class CollegePresenter implements CollegeContract.Presenter {
         mView = null;
     }
 
+    @DebugLog
     @Override
     public void loadColleges() {
 

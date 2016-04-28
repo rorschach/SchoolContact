@@ -1,5 +1,7 @@
 package me.rorschach.schoolcontacts.data;
 
+import android.support.annotation.Nullable;
+
 import com.raizlabs.android.dbflow.sql.language.Condition;
 import com.raizlabs.android.dbflow.sql.language.SQLite;
 
@@ -23,11 +25,12 @@ public class HistoryRepository implements Repository<History> {
         INSTANCE = null;
     }
 
-    private static class RepositoryHolder{
+    private static class RepositoryHolder {
         public static final HistoryRepository REPOSITORY = new HistoryRepository();
     }
 
-    private HistoryRepository(){}
+    private HistoryRepository() {
+    }
 
     @Override
     public void add(History item) {
@@ -65,7 +68,7 @@ public class HistoryRepository implements Repository<History> {
     }
 
     @Override
-    public List<History> queryList(Class<History> clz, Condition... conditions) {
+    public List<History> queryList(Class<History> clz, @Nullable Condition... conditions) {
         return SQLite.select().from(clz).where(conditions).queryList();
     }
 

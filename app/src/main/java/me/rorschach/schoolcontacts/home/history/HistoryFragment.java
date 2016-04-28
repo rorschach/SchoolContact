@@ -1,6 +1,7 @@
 package me.rorschach.schoolcontacts.home.history;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,7 +9,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +56,8 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
         mRvHistory.setHasFixedSize(true);
 
         mHistories = new ArrayList<>();
-        mHistoryAdapter = new HistoryAdapter(mHistories);
+        WeakReference<Activity> reference = new WeakReference<Activity>(getActivity());
+        mHistoryAdapter = new HistoryAdapter(reference.get(), mHistories);
         mRvHistory.setAdapter(mHistoryAdapter);
     }
 
@@ -124,7 +128,13 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
 
     public static class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryHolder> {
 
+        private Activity mActivity;
         private List<History> mHistories;
+
+        public HistoryAdapter(Activity activity, List<History> histories) {
+            mActivity = activity;
+            mHistories = histories;
+        }
 
         public HistoryAdapter(List<History> histories) {
             mHistories = histories;
@@ -132,12 +142,14 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
 
         @Override
         public HistoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return null;
+            final View view = mActivity.getLayoutInflater().inflate(R.layout.item_college, parent, false);
+            return new HistoryHolder(view);
         }
 
         @Override
         public void onBindViewHolder(HistoryHolder holder, int position) {
-
+            History history = mHistories.get(position);
+            holder.mTvCollege.setText(history.toString());
         }
 
         @Override
@@ -147,8 +159,12 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
 
         class HistoryHolder extends RecyclerView.ViewHolder {
 
+            @Bind(R.id.tv_college)
+            TextView mTvCollege;
+
             public HistoryHolder(View itemView) {
                 super(itemView);
+                ButterKnife.bind(this, itemView);
             }
         }
 
