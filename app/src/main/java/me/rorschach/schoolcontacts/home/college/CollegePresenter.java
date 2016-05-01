@@ -2,8 +2,11 @@ package me.rorschach.schoolcontacts.home.college;
 
 import android.support.annotation.NonNull;
 
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.data.ContactRepository;
@@ -51,12 +54,13 @@ public class CollegePresenter implements CollegeContract.Presenter {
                     public void call(Subscriber<? super List<String>> subscriber) {
 
                         List<Contact> contacts = mRepository.loadAllColleges();
-
                         List<String> colleges = new ArrayList<>();
 
                         for (Contact contact : contacts) {
                             colleges.add(contact.getCollege());
                         }
+
+                        Collections.sort(colleges, Collator.getInstance(Locale.CHINESE));
 
                         subscriber.onNext(colleges);
                         subscriber.onCompleted();

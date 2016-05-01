@@ -159,7 +159,7 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
 
         class HistoryHolder extends RecyclerView.ViewHolder {
 
-            @Bind(R.id.tv_college)
+            @Bind(R.id.tv_college_item)
             TextView mTvCollege;
 
             public HistoryHolder(View itemView) {

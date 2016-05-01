@@ -1,6 +1,13 @@
 package me.rorschach.schoolcontacts.home;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -22,6 +29,8 @@ import com.raizlabs.android.dbflow.sql.language.SQLite;
 import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
 
+import java.io.File;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import butterknife.Bind;
@@ -38,6 +47,7 @@ import me.rorschach.schoolcontacts.home.history.HistoryFragment;
 import me.rorschach.schoolcontacts.home.history.HistoryPresenter;
 import me.rorschach.schoolcontacts.home.star.StarFragment;
 import me.rorschach.schoolcontacts.home.star.StarPresenter;
+import me.rorschach.schoolcontacts.util.AccessStorageApi;
 import me.rorschach.schoolcontacts.util.IOUtil;
 import rx.Observable;
 import rx.Subscriber;
@@ -110,6 +120,67 @@ public class HomeActivity extends AppCompatActivity {
 //        testContact();
 
 //        testHistory();
+
+        chooseFile();
+    }
+
+    private void chooseFile() {
+
+        SharedPreferences sp = this.getSharedPreferences("backup", MODE_PRIVATE);
+        String path = sp.getString("BACKUP_PATH",
+                Environment.getExternalStorageDirectory().getPath() + "/GnnuContact/");
+
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+//        Uri uri = Uri.parse("/storage/emulated/0/Download/");
+//        intent.setDataAndType(uri, "application/vnd.android.package-archive");
+        Uri uri = Uri.parse(path);
+        intent.setDataAndType(uri, "text/xml");
+//        intent.setType("*/*");
+        startActivityForResult(Intent.createChooser(intent, "请选择备份文件"), 0x01);
+
+    }
+
+    private static final String TAG = "TAG";
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 0x01 && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+            Log.d(TAG, "onActivityResult: " + uri.toString());
+
+            String path = AccessStorageApi.getPath(this, uri);
+            Log.d(TAG, "onActivityResult: " + path);
+
+            File file = new File(uri.getPath());
+            Log.d(TAG, "onActivityResult: " + file.getAbsolutePath());
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private String getPath(Context context, Uri uri) throws URISyntaxException {
+        if ("content".equalsIgnoreCase(uri.getScheme())) {
+            String[] projection = {"_data"};
+            Cursor cursor;
+
+            try {
+                cursor = context.getContentResolver().query(uri, projection, null, null, null);
+                int column_index = cursor.getColumnIndexOrThrow("_data");
+
+                if (cursor.moveToFirst()) {
+                    String path = cursor.getString(column_index);
+                    cursor.close();
+
+                    return path;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            return uri.getPath();
+        }
+
+        return null;
     }
 
     private void testHistory() {
@@ -128,7 +199,7 @@ public class HomeActivity extends AppCompatActivity {
                         history.setEndTime(dateTime);
                         history.save();
 
-                        List<History> histories =  SQLite.select().from(History.class).queryList();
+                        List<History> histories = SQLite.select().from(History.class).queryList();
 
                         subscriber.onNext(histories);
                     }

@@ -3,6 +3,7 @@ package me.rorschach.schoolcontacts.home.college;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -12,6 +13,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,13 +22,14 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import hugo.weaving.DebugLog;
+import me.rorschach.schoolcontacts.HanziToPinyin;
 import me.rorschach.schoolcontacts.R;
 
 public class CollegeFragment extends Fragment implements CollegeContract.View {
 
 
     @Bind(R.id.rv_college)
-    RecyclerView mRvCollege;
+    FastScrollRecyclerView mRvCollege;
 
     private CollegeContract.Presenter mPresenter;
 
@@ -113,10 +117,14 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
         return isAdded();
     }
 
-    public static class CollegeAdapter extends RecyclerView.Adapter<CollegeAdapter.CollegeHolder> {
+    public static class CollegeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+            implements FastScrollRecyclerView.SectionedAdapter {
 
         private Activity mActivity;
         private List<String> colleges;
+
+        private static final int ITEM = 0;
+        private static final int HEAD = 1;
 
         public CollegeAdapter(WeakReference<Activity> reference, List<String> colleges) {
             mActivity = reference.get();
@@ -124,15 +132,60 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
         }
 
         @Override
-        public CollegeHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            final View view = mActivity.getLayoutInflater().inflate(R.layout.item_college, parent, false);
-            return new CollegeHolder(view);
+        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+            LayoutInflater inflater = mActivity.getLayoutInflater();
+            View view;
+
+            if (viewType == HEAD) {
+                view = inflater.inflate(R.layout.item_college_head, parent, false);
+                return new HeadHolder(view);
+            } else if (viewType == ITEM) {
+                view = inflater.inflate(R.layout.item_college, parent, false);
+                return new ItemHolder(view);
+            }else {
+                return null;
+            }
         }
 
         @Override
-        public void onBindViewHolder(CollegeHolder holder, int position) {
+        public int getItemViewType(int position) {
+
+            if (position == 0) {
+                return HEAD;
+            } else {
+
+                String current = colleges.get(position).charAt(0) + "";
+                char c = HanziToPinyin.getPinYin(current).charAt(0);
+
+                String previous = colleges.get(position - 1).charAt(0) + "";
+                char c1 = HanziToPinyin.getPinYin(previous).charAt(0);
+
+                if (c == c1) {
+                    return ITEM;
+                } else {
+                    return HEAD;
+                }
+            }
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             String college = colleges.get(position);
-            holder.mTvCollege.setText(college);
+
+            if (holder instanceof HeadHolder) {
+                ((HeadHolder) holder).mTvCollegeItem.setText(college);
+
+                String pinyin = HanziToPinyin
+                        .getPinYin(college.charAt(0) + "")
+                        .charAt(0) + "";
+
+                ((HeadHolder) holder).mTvCollegeHead.setText(pinyin);
+
+            } else if(holder instanceof ItemHolder){
+                ((ItemHolder) holder).mTvCollegeItem.setText(college);
+            }
+
         }
 
         @Override
@@ -140,12 +193,38 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
             return colleges.size();
         }
 
-        class CollegeHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+        @NonNull
+        @Override
+        public String getSectionName(int position) {
 
-            @Bind(R.id.tv_college)
-            TextView mTvCollege;
+            if (getItemViewType(position) == ITEM) {
+                String source = colleges.get(position).charAt(0) + "";
+                String result = HanziToPinyin.getPinYin(source);
+                return result.charAt(0) + "";
+            }else {
+                return "";
+            }
+        }
 
-            public CollegeHolder(View itemView) {
+        class HeadHolder extends RecyclerView.ViewHolder {
+
+            @Bind(R.id.tv_college_head)
+            TextView mTvCollegeHead;
+            @Bind(R.id.tv_college_item)
+            TextView mTvCollegeItem;
+
+            public HeadHolder(View itemView) {
+                super(itemView);
+                ButterKnife.bind(this, itemView);
+            }
+        }
+
+        class ItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+            @Bind(R.id.tv_college_item)
+            TextView mTvCollegeItem;
+
+            public ItemHolder(View itemView) {
                 super(itemView);
                 ButterKnife.bind(this, itemView);
 
@@ -157,7 +236,6 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
                 Toast.makeText(mActivity, "position:" + getAdapterPosition(), Toast.LENGTH_SHORT).show();
             }
         }
-
     }
 
 }
