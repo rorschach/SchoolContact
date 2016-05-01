@@ -100,6 +100,14 @@ public class ContactRepository implements Repository<Contact> {
                 .querySingle();
     }
 
+    public List<Contact> loadContactsByCollege(String college) {
+
+        return SQLite.select()
+                .from(Contact.class)
+                .where(Contact_Table.college.eq(college))
+                .queryList();
+    }
+
     @DebugLog
     public List<Contact> searchByKey(String keyword) {
 

@@ -1,9 +1,9 @@
 package me.rorschach.schoolcontacts.search;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.data.ContactRepository;
@@ -22,6 +22,8 @@ public class SearchPresenter implements SearchContract.Presenter {
     private ContactRepository mRepository;
     private SearchContract.View mView;
 
+    private static final String TAG = "SearchPresenter";
+
     public SearchPresenter(@NonNull ContactRepository repository,
                            @NonNull SearchContract.View view) {
         mRepository = repository;
@@ -34,14 +36,14 @@ public class SearchPresenter implements SearchContract.Presenter {
     @Override
     public void search(final String keyword) {
 
-        if ("".equals(keyword)) {
-            return;
-        }
-
         Observable
                 .create(new Observable.OnSubscribe<List<Contact>>() {
                     @Override
                     public void call(Subscriber<? super List<Contact>> subscriber) {
+
+//                        if (keyword == null || "".equals(keyword)) {
+//                            subscriber.onNext(null);
+//                        }
 
                         List<Contact> result = mRepository.searchByKey(keyword);
 
@@ -49,7 +51,6 @@ public class SearchPresenter implements SearchContract.Presenter {
                         subscriber.onCompleted();
                     }
                 })
-                .throttleFirst(1000, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<List<Contact>>() {
@@ -62,7 +63,9 @@ public class SearchPresenter implements SearchContract.Presenter {
 
                     @Override
                     public void onError(Throwable e) {
+                        Log.e(TAG, "onError: " + e.getMessage());
                         if (mView.isActive()) {
+                            mView.showNoResult();
                             mView.setLoadingIndicator(false);
                         }
                     }
@@ -71,7 +74,7 @@ public class SearchPresenter implements SearchContract.Presenter {
                     public void onNext(List<Contact> result) {
                         if (mView.isActive()) {
 
-                            if (result.isEmpty()) {
+                            if (result == null || result.isEmpty()) {
                                 mView.showNoResult();
                             }else{
                                 mView.showSearchResult(result);

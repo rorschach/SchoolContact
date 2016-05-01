@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -11,6 +12,8 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,11 +21,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.jakewharton.rxbinding.support.v7.widget.RxSearchView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.Bind;
 import butterknife.BindString;
@@ -32,6 +37,8 @@ import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
 import me.rorschach.schoolcontacts.util.TextUtil;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 
 public class SearchActivity extends AppCompatActivity implements SearchContract.View {
 
@@ -41,9 +48,13 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
     RecyclerView mRvSearch;
     @Bind(R.id.fab)
     FloatingActionButton mFab;
+    @Bind(R.id.tv_empty)
+    TextView mTvEmpty;
 
     @BindString(R.string.search_hint)
     String searchHint;
+    @BindString(R.string.title_activity_search)
+    String title;
 
     private SearchView mSearchView;
 
@@ -70,12 +81,12 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
     private void initView() {
 
         mToolbar.inflateMenu(R.menu.menu_search);
-        mToolbar.setPopupTheme(R.style.AppTheme_ToolBar);
 
         setSupportActionBar(mToolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowTitleEnabled(true);
         }
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
@@ -87,14 +98,15 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
         mSearchAdapter = new SearchAdapter(reference.get(), mResult);
         mRvSearch.setAdapter(mSearchAdapter);
 
-//        RxSearchView.queryTextChanges(mSearchView)
-//                .debounce(5, TimeUnit.MILLISECONDS)
-//                .subscribe(new Action1<CharSequence>() {
-//                    @Override
-//                    public void call(CharSequence charSequence) {
-//                        mPresenter.search(charSequence.toString());
-//                    }
-//                });
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        keyword = "";
+        mPresenter.start();
     }
 
     @Override
@@ -121,28 +133,58 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
             mSearchView.setIconifiedByDefault(true);
             mSearchView.setQueryHint(
                     Html.fromHtml("<font color = #F9F9F9>" + searchHint + "</font>"));
-            mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                @DebugLog
-                public boolean onQueryTextSubmit(String query) {
-                    if (query.equals(keyword)) {
-                        return false;
-                    }
-                    keyword = query;
-                    mPresenter.search(keyword);
-                    return true;
-                }
 
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    if (newText.equals(keyword)) {
-                        return false;
-                    }
-                    keyword = newText;
-                    mPresenter.search(keyword);
-                    return true;
-                }
-            });
+            RxSearchView.queryTextChanges(mSearchView)
+                    .debounce(500, TimeUnit.MILLISECONDS)
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Subscriber<CharSequence>() {
+                        @Override
+                        public void onCompleted() {
+                            Log.d("TAG", "onCompleted: " + keyword);
+                        }
+
+                        @Override
+                        public void onError(Throwable e) {
+                            Log.e("TAG", "onError: " + e.getMessage());
+                        }
+
+                        @Override
+                        public void onNext(CharSequence charSequence) {
+
+                            String cs = charSequence.toString();
+
+                            if (!TextUtils.isEmpty(cs)) {
+                                keyword = cs;
+                                mPresenter.search(keyword);
+                            } else {
+                                showNoResult();
+                            }
+                        }
+                    });
+
+//            mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//                @Override
+//                @DebugLog
+//                public boolean onQueryTextSubmit(String query) {
+//                    if (query.equals(keyword)) {
+//                        return false;
+//                    }
+//                    keyword = query;
+//                    mPresenter.search(keyword);
+//                    return true;
+//                }
+//
+//                @Override
+//                public boolean onQueryTextChange(String newText) {
+//                    if (newText.equals(keyword)) {
+//                        return false;
+//                    }
+//                    keyword = newText;
+//                    mPresenter.search(keyword);
+//                    return true;
+//                }
+//            });
 
             MenuItemCompat.expandActionView(menuItem);
             MenuItemCompat.setOnActionExpandListener(menuItem, new MenuItemCompat.OnActionExpandListener() {
@@ -153,8 +195,11 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
 
                 @Override
                 public boolean onMenuItemActionCollapse(MenuItem item) {
+
                     if ("".equals(keyword)) {
                         onBackPressed();
+                    }else {
+                        keyword = "";
                     }
                     return true;
                 }
@@ -172,6 +217,9 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
     @DebugLog
     @Override
     public void showSearchResult(List<Contact> result) {
+        mTvEmpty.setVisibility(View.INVISIBLE);
+        mRvSearch.setVisibility(View.VISIBLE);
+
         mResult.clear();
         mResult.addAll(result);
         mSearchAdapter.notifyDataSetChanged();
@@ -179,9 +227,13 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
 
     @Override
     public void showNoResult() {
-        mResult.clear();
-        mSearchAdapter.notifyDataSetChanged();
-        Toast.makeText(this, "no result!", Toast.LENGTH_SHORT).show();
+
+        mTvEmpty.setVisibility(View.VISIBLE);
+        mRvSearch.setVisibility(View.INVISIBLE);
+
+//        mResult.clear();
+//        mSearchAdapter.notifyDataSetChanged();
+//        Toast.makeText(this, "no result!", Toast.LENGTH_SHORT).show();
     }
 
     @Override

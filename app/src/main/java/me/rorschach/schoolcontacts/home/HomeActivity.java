@@ -1,10 +1,8 @@
 package me.rorschach.schoolcontacts.home;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,13 +23,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.raizlabs.android.dbflow.sql.language.SQLite;
-
-import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
 
-import java.io.File;
-import java.net.URISyntaxException;
 import java.util.List;
 
 import butterknife.Bind;
@@ -40,8 +33,6 @@ import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.HistoryRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
-import me.rorschach.schoolcontacts.data.local.ContactType;
-import me.rorschach.schoolcontacts.data.local.History;
 import me.rorschach.schoolcontacts.home.college.CollegeFragment;
 import me.rorschach.schoolcontacts.home.college.CollegePresenter;
 import me.rorschach.schoolcontacts.home.history.HistoryFragment;
@@ -91,7 +82,6 @@ public class HomeActivity extends AppCompatActivity {
     private void initView() {
 
         mToolbar.inflateMenu(R.menu.menu_search);
-//        setSupportActionBar(mToolbar);
 
         mCollegeFragment = CollegeFragment.newInstance();
         mHistoryFragment = HistoryFragment.newInstance();
@@ -152,10 +142,6 @@ public class HomeActivity extends AppCompatActivity {
 //        intent.setData(uri);
 //        intent.putExtra("sms_body", "test");
 //        startActivity(intent);
-
-//        testHistory();
-
-//        chooseFile();
     }
 
     private void chooseFile() {
@@ -172,7 +158,6 @@ public class HomeActivity extends AppCompatActivity {
         intent.setDataAndType(uri, "text/xml");
 //        intent.setType("*/*");
         startActivityForResult(Intent.createChooser(intent, "请选择备份文件"), 0x01);
-
     }
 
     private static final String TAG = "TAG";
@@ -186,79 +171,13 @@ public class HomeActivity extends AppCompatActivity {
             String path = AccessStorageApi.getPath(this, uri);
             Log.d(TAG, "onActivityResult: " + path);
 
-            File file = new File(uri.getPath());
-            Log.d(TAG, "onActivityResult: " + file.getAbsolutePath());
+//            XmlPullParser xpp = Xml.newPullParser();
+//            xpp.setInput(new FileInputStream(path));
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private String getPath(Context context, Uri uri) throws URISyntaxException {
-        if ("content".equalsIgnoreCase(uri.getScheme())) {
-            String[] projection = {"_data"};
-            Cursor cursor;
-
-            try {
-                cursor = context.getContentResolver().query(uri, projection, null, null, null);
-                int column_index = cursor.getColumnIndexOrThrow("_data");
-
-                if (cursor.moveToFirst()) {
-                    String path = cursor.getString(column_index);
-                    cursor.close();
-
-                    return path;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return uri.getPath();
-        }
-
-        return null;
-    }
-
-    private void testHistory() {
-
-        Observable
-                .create(new Observable.OnSubscribe<List<History>>() {
-                    @Override
-                    public void call(Subscriber<? super List<History>> subscriber) {
-
-                        DateTime dateTime = new DateTime();
-
-                        History history = new History();
-                        history.setContactsId(1);
-                        history.setContactType(ContactType.PHONE);
-                        history.setBeginTime(dateTime);
-                        history.setEndTime(dateTime);
-                        history.save();
-
-                        List<History> histories = SQLite.select().from(History.class).queryList();
-
-                        subscriber.onNext(histories);
-                    }
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<List<History>>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onNext(List<History> histories) {
-                        Log.d("TAG", histories.toString());
-                    }
-                });
-    }
-
-    private void testContact() {
+    private void importFromFile(String path) {
         Observable
                 .create(new Observable.OnSubscribe<List<Contact>>() {
                     @Override
@@ -268,8 +187,6 @@ public class HomeActivity extends AppCompatActivity {
 
                         List<Contact> contacts = IOUtil.parseXml(xpp);
                         repository.saveAll(contacts);
-
-//                        List<Contact> contacts = repository.searchByKey("黄小平");
 
                         subscriber.onNext(contacts);
                         subscriber.onCompleted();
@@ -305,7 +222,6 @@ public class HomeActivity extends AppCompatActivity {
                     }
                 });
     }
-
 
     public static class PagerAdapter extends FragmentPagerAdapter {
 

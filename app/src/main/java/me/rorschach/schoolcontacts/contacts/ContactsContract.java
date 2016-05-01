@@ -21,9 +21,9 @@ public interface ContactsContract {
 
         void showNoContact();
 
-        void showAddContact();
+        void showAddContact(@NonNull Contact contact);
 
-        void showDeleContact();
+        void showDeleteContact(@NonNull Contact contact);
 
         boolean isActive();
     }

@@ -2,6 +2,7 @@ package me.rorschach.schoolcontacts.home.college;
 
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -11,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
@@ -22,8 +22,9 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import hugo.weaving.DebugLog;
-import me.rorschach.schoolcontacts.HanziToPinyin;
 import me.rorschach.schoolcontacts.R;
+import me.rorschach.schoolcontacts.contacts.ContactsActivity;
+import me.rorschach.schoolcontacts.util.HanziToPinyin;
 
 public class CollegeFragment extends Fragment implements CollegeContract.View {
 
@@ -107,8 +108,8 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
     @DebugLog
     @Override
     public void showColleges(List<String> colleges) {
-        this.mColleges.clear();
-        this.mColleges.addAll(colleges);
+        mColleges.clear();
+        mColleges.addAll(colleges);
         mCollegeAdapter.notifyDataSetChanged();
     }
 
@@ -143,7 +144,7 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
             } else if (viewType == ITEM) {
                 view = inflater.inflate(R.layout.item_college, parent, false);
                 return new ItemHolder(view);
-            }else {
+            } else {
                 return null;
             }
         }
@@ -182,7 +183,7 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
 
                 ((HeadHolder) holder).mTvCollegeHead.setText(pinyin);
 
-            } else if(holder instanceof ItemHolder){
+            } else if (holder instanceof ItemHolder) {
                 ((ItemHolder) holder).mTvCollegeItem.setText(college);
             }
 
@@ -201,12 +202,12 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
                 String source = colleges.get(position).charAt(0) + "";
                 String result = HanziToPinyin.getPinYin(source);
                 return result.charAt(0) + "";
-            }else {
+            } else {
                 return "";
             }
         }
 
-        class HeadHolder extends RecyclerView.ViewHolder {
+        class HeadHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
             @Bind(R.id.tv_college_head)
             TextView mTvCollegeHead;
@@ -216,6 +217,16 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
             public HeadHolder(View itemView) {
                 super(itemView);
                 ButterKnife.bind(this, itemView);
+
+                itemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mActivity, ContactsActivity.class);
+                int position = getAdapterPosition();
+                intent.putExtra("COLLEGE", colleges.get(position));
+                mActivity.startActivity(intent);
             }
         }
 
@@ -233,7 +244,10 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
 
             @Override
             public void onClick(View v) {
-                Toast.makeText(mActivity, "position:" + getAdapterPosition(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(mActivity, ContactsActivity.class);
+                int position = getAdapterPosition();
+                intent.putExtra("COLLEGE", colleges.get(position));
+                mActivity.startActivity(intent);
             }
         }
     }

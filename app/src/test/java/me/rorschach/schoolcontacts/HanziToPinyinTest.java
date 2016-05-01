@@ -2,6 +2,8 @@ package me.rorschach.schoolcontacts;
 
 import org.junit.Test;
 
+import me.rorschach.schoolcontacts.util.HanziToPinyin;
+
 /**
  * Created by lei on 16-5-1.
  */
