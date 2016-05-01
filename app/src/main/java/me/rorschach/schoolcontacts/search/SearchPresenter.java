@@ -3,10 +3,11 @@ package me.rorschach.schoolcontacts.search;
 import android.support.annotation.NonNull;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
-import me.rorschach.schoolcontacts.data.local.Contact_Table;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -29,20 +30,26 @@ public class SearchPresenter implements SearchContract.Presenter {
         mView.setPresenter(this);
     }
 
+    @DebugLog
     @Override
     public void search(final String keyword) {
+
+        if ("".equals(keyword)) {
+            return;
+        }
+
         Observable
                 .create(new Observable.OnSubscribe<List<Contact>>() {
                     @Override
                     public void call(Subscriber<? super List<Contact>> subscriber) {
 
-                        List<Contact> result = mRepository.queryList(Contact.class,
-                                Contact_Table.name.like(keyword), Contact_Table.phone.like(keyword));
+                        List<Contact> result = mRepository.searchByKey(keyword);
 
                         subscriber.onNext(result);
                         subscriber.onCompleted();
                     }
                 })
+                .throttleFirst(1000, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<List<Contact>>() {
@@ -77,7 +84,7 @@ public class SearchPresenter implements SearchContract.Presenter {
 
     @Override
     public void start() {
-
+        mView.showNoResult();
     }
 
     @Override

@@ -21,6 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -47,6 +48,7 @@ import me.rorschach.schoolcontacts.home.history.HistoryFragment;
 import me.rorschach.schoolcontacts.home.history.HistoryPresenter;
 import me.rorschach.schoolcontacts.home.star.StarFragment;
 import me.rorschach.schoolcontacts.home.star.StarPresenter;
+import me.rorschach.schoolcontacts.search.SearchActivity;
 import me.rorschach.schoolcontacts.util.AccessStorageApi;
 import me.rorschach.schoolcontacts.util.IOUtil;
 import rx.Observable;
@@ -89,6 +91,7 @@ public class HomeActivity extends AppCompatActivity {
     private void initView() {
 
         mToolbar.inflateMenu(R.menu.menu_search);
+//        setSupportActionBar(mToolbar);
 
         mCollegeFragment = CollegeFragment.newInstance();
         mHistoryFragment = HistoryFragment.newInstance();
@@ -114,14 +117,45 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
-    private void test() {
-//        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        final MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_home, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_search:
+                startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+                break;
+            case R.id.action_update:
+                chooseFile();
+                break;
+            case R.id.action_export:
+                break;
+            case R.id.action_settings:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void test() {
 //        testContact();
+
+        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+
+//        Intent intent = new Intent();
+//        intent.setAction(Intent.ACTION_SENDTO);
+//        Uri uri = Uri.parse("smsto:"+"18370998101;18370995001");
+//        intent.setData(uri);
+//        intent.putExtra("sms_body", "test");
+//        startActivity(intent);
 
 //        testHistory();
 
-        chooseFile();
+//        chooseFile();
     }
 
     private void chooseFile() {
@@ -272,14 +306,6 @@ public class HomeActivity extends AppCompatActivity {
                 });
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-
-        final MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_search, menu);
-
-        return super.onCreateOptionsMenu(menu);
-    }
 
     public static class PagerAdapter extends FragmentPagerAdapter {
 

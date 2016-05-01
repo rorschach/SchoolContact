@@ -1,5 +1,6 @@
 package me.rorschach.schoolcontacts.search;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.MenuItemCompat;
@@ -9,22 +10,30 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
+import android.text.SpannableStringBuilder;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
+import butterknife.BindString;
 import butterknife.ButterKnife;
 import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.R;
+import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
+import me.rorschach.schoolcontacts.util.TextUtil;
 
-public class SearchActivity extends AppCompatActivity implements SearchContract.View{
+public class SearchActivity extends AppCompatActivity implements SearchContract.View {
 
     @Bind(R.id.toolbar)
     Toolbar mToolbar;
@@ -33,12 +42,17 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
     @Bind(R.id.fab)
     FloatingActionButton mFab;
 
+    @BindString(R.string.search_hint)
+    String searchHint;
+
+    private SearchView mSearchView;
+
     private SearchContract.Presenter mPresenter;
 
     private boolean isActive;
 
     private List<Contact> mResult;
-    private SearchAdapter  mSearchAdapter;
+    private SearchAdapter mSearchAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +61,10 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
         ButterKnife.bind(this);
 
         initView();
+
+        isActive = true;
+
+        mPresenter = new SearchPresenter(ContactRepository.getInstance(), this);
     }
 
     private void initView() {
@@ -65,15 +83,18 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
         mRvSearch.setHasFixedSize(true);
 
         mResult = new ArrayList<>();
-        mSearchAdapter = new SearchAdapter(mResult);
+        WeakReference<Activity> reference = new WeakReference<Activity>(this);
+        mSearchAdapter = new SearchAdapter(reference.get(), mResult);
         mRvSearch.setAdapter(mSearchAdapter);
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        isActive = true;
+//        RxSearchView.queryTextChanges(mSearchView)
+//                .debounce(5, TimeUnit.MILLISECONDS)
+//                .subscribe(new Action1<CharSequence>() {
+//                    @Override
+//                    public void call(CharSequence charSequence) {
+//                        mPresenter.search(charSequence.toString());
+//                    }
+//                });
     }
 
     @Override
@@ -86,26 +107,39 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
         }
     }
 
+    private static String keyword = "";
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_search, menu);
 
         final MenuItem menuItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) menuItem.getActionView();
+        mSearchView = (SearchView) menuItem.getActionView();
 
-        if (searchView != null) {
-            searchView.setIconifiedByDefault(true);
-            searchView.setQueryHint(Html.fromHtml("<font color = #ffffff>" + "查询" + "</font>"));
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        if (mSearchView != null) {
+            mSearchView.setIconifiedByDefault(true);
+            mSearchView.setQueryHint(
+                    Html.fromHtml("<font color = #F9F9F9>" + searchHint + "</font>"));
+            mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 @DebugLog
                 public boolean onQueryTextSubmit(String query) {
+                    if (query.equals(keyword)) {
+                        return false;
+                    }
+                    keyword = query;
+                    mPresenter.search(keyword);
                     return true;
                 }
 
                 @Override
                 public boolean onQueryTextChange(String newText) {
+                    if (newText.equals(keyword)) {
+                        return false;
+                    }
+                    keyword = newText;
+                    mPresenter.search(keyword);
                     return true;
                 }
             });
@@ -119,7 +153,9 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
 
                 @Override
                 public boolean onMenuItemActionCollapse(MenuItem item) {
-                    onBackPressed();
+                    if ("".equals(keyword)) {
+                        onBackPressed();
+                    }
                     return true;
                 }
             });
@@ -127,11 +163,13 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
 
         return super.onCreateOptionsMenu(menu);
     }
+
     @Override
     public void setLoadingIndicator(boolean active) {
 
     }
 
+    @DebugLog
     @Override
     public void showSearchResult(List<Contact> result) {
         mResult.clear();
@@ -141,7 +179,9 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
 
     @Override
     public void showNoResult() {
-
+        mResult.clear();
+        mSearchAdapter.notifyDataSetChanged();
+        Toast.makeText(this, "no result!", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -156,22 +196,33 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
         }
     }
 
-    private static class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.SearchHolder> {
+    public static class SearchAdapter extends RecyclerView.Adapter<SearchAdapter.SearchHolder> {
 
+        private Activity mActivity;
         private List<Contact> result;
 
-        public SearchAdapter(List<Contact> result) {
+        public SearchAdapter(Activity activity, List<Contact> result) {
+            mActivity = activity;
             this.result = result;
         }
 
         @Override
         public SearchHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return null;
+            LayoutInflater inflater = mActivity.getLayoutInflater();
+            final View view = inflater.inflate(R.layout.item_result, parent, false);
+            return new SearchHolder(view);
         }
 
         @Override
         public void onBindViewHolder(SearchHolder holder, int position) {
+            Contact contact = result.get(position);
 
+            String result = contact.getName() + " - " + contact.getPhone();
+
+            SpannableStringBuilder textString =
+                    TextUtil.highlight(mActivity, result, keyword);
+
+            holder.mTvResult.setText(textString);
         }
 
         @Override
@@ -179,13 +230,16 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
             return result.size();
         }
 
-        static class SearchHolder extends RecyclerView.ViewHolder{
+        static class SearchHolder extends RecyclerView.ViewHolder {
+
+            @Bind(R.id.tv_result)
+            TextView mTvResult;
+
             public SearchHolder(View itemView) {
                 super(itemView);
+                ButterKnife.bind(this, itemView);
             }
         }
-
     }
-
 
 }
