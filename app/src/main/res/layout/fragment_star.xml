@@ -5,7 +5,6 @@
              tools:context="me.rorschach.schoolcontacts.home.star.StarFragment">
 
     <android.support.v7.widget.RecyclerView
-        android:background="@android:color/holo_green_dark"
         android:id="@+id/rv_star"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

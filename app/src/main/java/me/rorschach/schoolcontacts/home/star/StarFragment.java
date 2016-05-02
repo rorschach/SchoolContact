@@ -1,6 +1,8 @@
 package me.rorschach.schoolcontacts.home.star;
 
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -8,7 +10,9 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +21,7 @@ import butterknife.ButterKnife;
 import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.local.Contact;
+import me.rorschach.schoolcontacts.detail.DetailActivity;
 
 public class StarFragment extends Fragment implements StarContract.View {
 
@@ -53,7 +58,8 @@ public class StarFragment extends Fragment implements StarContract.View {
         mRvStar.setHasFixedSize(true);
 
         mStared = new ArrayList<>();
-        mStarAdapter = new StarAdapter(mStared);
+        WeakReference<Activity> reference = new WeakReference<Activity>(getActivity());
+        mStarAdapter = new StarAdapter(reference.get(), mStared);
         mRvStar.setAdapter(mStarAdapter);
     }
 
@@ -96,7 +102,9 @@ public class StarFragment extends Fragment implements StarContract.View {
     @DebugLog
     @Override
     public void showStars(List<Contact> contacts) {
-
+        mStared.clear();
+        mStared.addAll(contacts);
+        mStarAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -121,20 +129,25 @@ public class StarFragment extends Fragment implements StarContract.View {
 
     public static class StarAdapter extends RecyclerView.Adapter<StarAdapter.StarHolder> {
 
+        private Activity mActivity;
         private List<Contact> mStared;
 
-        public StarAdapter(List<Contact> stared) {
+        public StarAdapter(Activity activity, List<Contact> stared) {
+            mActivity = activity;
             mStared = stared;
         }
 
         @Override
         public StarHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            return null;
+            LayoutInflater inflater = mActivity.getLayoutInflater();
+            final View view = inflater.inflate(R.layout.item_contacts, parent, false);
+            return new StarHolder(view);
         }
 
         @Override
         public void onBindViewHolder(StarHolder holder, int position) {
-
+            Contact contact = mStared.get(position);
+            holder.mTvContacts.setText(contact.getName() + " - " + contact.getPhone());
         }
 
         @Override
@@ -142,9 +155,25 @@ public class StarFragment extends Fragment implements StarContract.View {
             return mStared.size();
         }
 
-        static class StarHolder extends RecyclerView.ViewHolder {
+        class StarHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+            @Bind(R.id.tv_contacts)
+            TextView mTvContacts;
+
             public StarHolder(View itemView) {
                 super(itemView);
+                ButterKnife.bind(this, itemView);
+
+                itemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mActivity, DetailActivity.class);
+                int position = getAdapterPosition();
+                Contact contact = mStared.get(position);
+                intent.putExtra("CONTACT", contact);
+                mActivity.startActivity(intent);
             }
         }
 

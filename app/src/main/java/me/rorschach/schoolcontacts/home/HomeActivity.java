@@ -3,6 +3,7 @@ package me.rorschach.schoolcontacts.home;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,6 +29,7 @@ import org.xmlpull.v1.XmlPullParser;
 import java.util.List;
 
 import butterknife.Bind;
+import butterknife.BindDrawable;
 import butterknife.ButterKnife;
 import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.ContactRepository;
@@ -62,6 +64,14 @@ public class HomeActivity extends AppCompatActivity {
     FloatingActionButton mFab;
     @Bind(R.id.main_content)
     CoordinatorLayout mMainContent;
+
+    @BindDrawable(R.drawable.ic_college_white_24dp)
+    Drawable collegeDrawable;
+    @BindDrawable(R.drawable.ic_record_white_24dp)
+    Drawable recordDrawable;
+    @BindDrawable(R.drawable.ic_star_white_24dp)
+    Drawable starDrawable;
+
     private PagerAdapter mPagerAdapter;
 
     private static HistoryFragment mHistoryFragment;
@@ -94,6 +104,9 @@ public class HomeActivity extends AppCompatActivity {
         mContainer.setCurrentItem(1);
 
         mTabs.setupWithViewPager(mContainer);
+        mTabs.getTabAt(0).setIcon(recordDrawable);
+        mTabs.getTabAt(1).setIcon(collegeDrawable);
+        mTabs.getTabAt(2).setIcon(starDrawable);
 
         HistoryPresenter historyPresenter = new HistoryPresenter(HistoryRepository.getInstance(), mHistoryFragment);
         collegePresenter = new CollegePresenter(ContactRepository.getInstance(), mCollegeFragment);
@@ -132,9 +145,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void test() {
-//        testContact();
+//        importFromFile(null);
 
-        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+//        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
 
 //        Intent intent = new Intent();
 //        intent.setAction(Intent.ACTION_SENDTO);
@@ -250,18 +263,20 @@ public class HomeActivity extends AppCompatActivity {
             return 3;
         }
 
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 0:
-                    return "记录";
-                case 1:
-                    return "学院";
-                case 2:
-                    return "收藏";
-                default:
-                    return null;
-            }
-        }
+
+
+//        @Override
+//        public CharSequence getPageTitle(int position) {
+//            switch (position) {
+//                case 0:
+//                    return "记录";
+//                case 1:
+//                    return "学院";
+//                case 2:
+//                    return "收藏";
+//                default:
+//                    return null;
+//            }
+//        }
     }
 }

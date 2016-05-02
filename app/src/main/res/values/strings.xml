@@ -8,6 +8,11 @@
     <string name="search_hint">请输入姓名或电话号码</string>
     <string name="search_empty">未找到匹配结果</string>
     <string name="title_activity_contacts">ContactsActivity</string>
-    <string name="title_activity_contacs">ContacsActivity</string>
+    <string name="title_activity_detail">DetailActivity</string>
+
+    <string name="action_star">收藏</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_delete">删除此联系人</string>
+    <string name="action_share">分享此联系人</string>
 
 </resources>

@@ -118,7 +118,7 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
         return isAdded();
     }
 
-    public static class CollegeAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+    public static class CollegeAdapter extends RecyclerView.Adapter<CollegeAdapter.CollegeHolder>
             implements FastScrollRecyclerView.SectionedAdapter {
 
         private Activity mActivity;
@@ -133,20 +133,11 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
         }
 
         @Override
-        public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public CollegeAdapter.CollegeHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
             LayoutInflater inflater = mActivity.getLayoutInflater();
-            View view;
-
-            if (viewType == HEAD) {
-                view = inflater.inflate(R.layout.item_college_head, parent, false);
-                return new HeadHolder(view);
-            } else if (viewType == ITEM) {
-                view = inflater.inflate(R.layout.item_college, parent, false);
-                return new ItemHolder(view);
-            } else {
-                return null;
-            }
+            View view = inflater.inflate(R.layout.item_college, parent, false);
+            return new CollegeHolder(view);
         }
 
         @Override
@@ -171,22 +162,22 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
         }
 
         @Override
-        public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-            String college = colleges.get(position);
+        public void onBindViewHolder(CollegeAdapter.CollegeHolder holder, int position) {
 
-            if (holder instanceof HeadHolder) {
-                ((HeadHolder) holder).mTvCollegeItem.setText(college);
+            String college = colleges.get(position);
+            holder.mTvCollegeItem.setText(college);
+
+            if (getItemViewType(position) == ITEM) {
+                holder.mTvCollegeHead.setVisibility(View.GONE);
+
+            } else if (getItemViewType(position) == HEAD) {
 
                 String pinyin = HanziToPinyin
                         .getPinYin(college.charAt(0) + "")
                         .charAt(0) + "";
 
-                ((HeadHolder) holder).mTvCollegeHead.setText(pinyin);
-
-            } else if (holder instanceof ItemHolder) {
-                ((ItemHolder) holder).mTvCollegeItem.setText(college);
+                holder.mTvCollegeHead.setText(pinyin);
             }
-
         }
 
         @Override
@@ -198,23 +189,19 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
         @Override
         public String getSectionName(int position) {
 
-            if (getItemViewType(position) == ITEM) {
-                String source = colleges.get(position).charAt(0) + "";
-                String result = HanziToPinyin.getPinYin(source);
-                return result.charAt(0) + "";
-            } else {
-                return "";
-            }
+            String source = colleges.get(position).charAt(0) + "";
+            String result = HanziToPinyin.getPinYin(source);
+            return result.charAt(0) + "";
         }
 
-        class HeadHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        class CollegeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
             @Bind(R.id.tv_college_head)
             TextView mTvCollegeHead;
             @Bind(R.id.tv_college_item)
             TextView mTvCollegeItem;
 
-            public HeadHolder(View itemView) {
+            public CollegeHolder(View itemView) {
                 super(itemView);
                 ButterKnife.bind(this, itemView);
 
@@ -230,26 +217,6 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
             }
         }
 
-        class ItemHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-            @Bind(R.id.tv_college_item)
-            TextView mTvCollegeItem;
-
-            public ItemHolder(View itemView) {
-                super(itemView);
-                ButterKnife.bind(this, itemView);
-
-                itemView.setOnClickListener(this);
-            }
-
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(mActivity, ContactsActivity.class);
-                int position = getAdapterPosition();
-                intent.putExtra("COLLEGE", colleges.get(position));
-                mActivity.startActivity(intent);
-            }
-        }
     }
 
 }

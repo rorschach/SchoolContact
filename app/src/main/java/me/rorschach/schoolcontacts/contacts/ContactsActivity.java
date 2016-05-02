@@ -32,11 +32,12 @@ import butterknife.ButterKnife;
 import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
+import me.rorschach.schoolcontacts.detail.DetailActivity;
 import me.rorschach.schoolcontacts.search.SearchActivity;
 import me.rorschach.schoolcontacts.util.AccessStorageApi;
 import me.rorschach.schoolcontacts.util.HanziToPinyin;
 
-public class ContactsActivity extends AppCompatActivity implements ContactsContract.View{
+public class ContactsActivity extends AppCompatActivity implements ContactsContract.View {
 
     @Bind(R.id.toolbar)
     Toolbar mToolbar;
@@ -205,7 +206,10 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
 
     public static class ContactsAdapter
             extends RecyclerView.Adapter<ContactsAdapter.ContactsHolder>
-            implements FastScrollRecyclerView.SectionedAdapter{
+            implements FastScrollRecyclerView.SectionedAdapter {
+
+        private static final int ITEM = 0;
+        private static final int HEAD = 1;
 
         private Activity mActivity;
         private List<Contact> mContacts;
@@ -224,8 +228,43 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
 
         @Override
         public void onBindViewHolder(ContactsHolder holder, int position) {
+
             Contact contact = mContacts.get(position);
-            holder.mTvContacts.setText(contact.getName() + " - " + contact.getPhone());
+            String name = contact.getName();
+
+            holder.mTvContacts.setText(name);
+
+            if (getItemViewType(position) == ITEM) {
+                holder.mTvContactsHead.setVisibility(View.GONE);
+
+            } else if (getItemViewType(position) == HEAD) {
+                String pinyin = HanziToPinyin
+                        .getPinYin(name.charAt(0) + "")
+                        .charAt(0) + "";
+
+                holder.mTvContactsHead.setText(pinyin);
+            }
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+
+            if (position == 0) {
+                return HEAD;
+            } else {
+
+                String current = mContacts.get(position).getName().charAt(0) + "";
+                char c = HanziToPinyin.getPinYin(current).charAt(0);
+
+                String previous = mContacts.get(position - 1).getName().charAt(0) + "";
+                char c1 = HanziToPinyin.getPinYin(previous).charAt(0);
+
+                if (c == c1) {
+                    return ITEM;
+                } else {
+                    return HEAD;
+                }
+            }
         }
 
         @NonNull
@@ -242,14 +281,27 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
             return mContacts.size();
         }
 
-        class ContactsHolder extends RecyclerView.ViewHolder{
+        class ContactsHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+            @Bind(R.id.tv_contacts_head)
+            TextView mTvContactsHead;
             @Bind(R.id.tv_contacts)
             TextView mTvContacts;
 
             public ContactsHolder(View itemView) {
                 super(itemView);
                 ButterKnife.bind(this, itemView);
+
+                itemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mActivity, DetailActivity.class);
+                int position = getAdapterPosition();
+                Contact contact = mContacts.get(position);
+                intent.putExtra("CONTACT", contact);
+                mActivity.startActivity(intent);
             }
         }
     }

@@ -2,7 +2,10 @@
 <manifest package="me.rorschach.schoolcontacts"
           xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:name=".MyApplication"
@@ -28,18 +31,22 @@
             android:parentActivityName=".home.HomeActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity
+            android:name=".contacts.ContactsActivity"
+            android:label=""
+            android:parentActivityName=".home.HomeActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.rorschach.schoolcontacts.home.HomeActivity"/>
         </activity>
         <activity
-            android:name=".contacts.ContactsActivity"
-            android:label="@string/title_activity_contacs"
-            android:parentActivityName=".home.HomeActivity"
+            android:name=".detail.DetailActivity"
+            android:label=""
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="me.rorschach.schoolcontacts.home.HomeActivity"/>
         </activity>
     </application>
 

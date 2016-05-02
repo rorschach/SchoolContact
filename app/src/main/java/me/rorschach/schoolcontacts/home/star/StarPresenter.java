@@ -7,6 +7,7 @@ import java.util.List;
 import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
+import me.rorschach.schoolcontacts.data.local.Contact_Table;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -46,7 +47,8 @@ public class StarPresenter implements StarContract.Presenter {
                 .create(new Observable.OnSubscribe<List<Contact>>() {
                     @Override
                     public void call(Subscriber<? super List<Contact>> subscriber) {
-                        List<Contact> stared = mRepository.loadAllStared();
+                        List<Contact> stared = mRepository
+                                .queryList(Contact.class, Contact_Table.stared.eq(true));
 
                         subscriber.onNext(stared);
                         subscriber.onCompleted();

@@ -14,6 +14,7 @@ import android.widget.TextView;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -128,6 +129,7 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
 
     public static class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryHolder> {
 
+
         private Activity mActivity;
         private List<History> mHistories;
 
@@ -136,20 +138,21 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
             mHistories = histories;
         }
 
-        public HistoryAdapter(List<History> histories) {
-            mHistories = histories;
-        }
-
         @Override
         public HistoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            final View view = mActivity.getLayoutInflater().inflate(R.layout.item_college, parent, false);
+            final View view = mActivity.getLayoutInflater().inflate(R.layout.item_history, parent, false);
             return new HistoryHolder(view);
         }
 
         @Override
         public void onBindViewHolder(HistoryHolder holder, int position) {
             History history = mHistories.get(position);
-            holder.mTvCollege.setText(history.toString());
+
+            String name = history.getId() + "";
+            holder.mTvHistoryName.setText(name);
+
+            String time = history.getBeginTime().toString("yyyy-MM-dd HH:mm:ss EE", Locale.CHINESE);
+            holder.mTvHistoryTime.setText(time);
         }
 
         @Override
@@ -159,8 +162,10 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
 
         class HistoryHolder extends RecyclerView.ViewHolder {
 
-            @Bind(R.id.tv_college_item)
-            TextView mTvCollege;
+            @Bind(R.id.tv_history_name)
+            TextView mTvHistoryName;
+            @Bind(R.id.tv_history_time)
+            TextView mTvHistoryTime;
 
             public HistoryHolder(View itemView) {
                 super(itemView);

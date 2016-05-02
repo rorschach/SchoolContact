@@ -1,6 +1,7 @@
 package me.rorschach.schoolcontacts.search;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.MenuItemCompat;
@@ -36,6 +37,7 @@ import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.R;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
+import me.rorschach.schoolcontacts.detail.DetailActivity;
 import me.rorschach.schoolcontacts.util.TextUtil;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -269,12 +271,13 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
         public void onBindViewHolder(SearchHolder holder, int position) {
             Contact contact = result.get(position);
 
-            String result = contact.getName() + " - " + contact.getPhone();
+            String name = contact.getName();
+            SpannableStringBuilder nameStr = TextUtil.highlight(mActivity, name, keyword);
+            holder.mTvResultName.setText(nameStr);
 
-            SpannableStringBuilder textString =
-                    TextUtil.highlight(mActivity, result, keyword);
-
-            holder.mTvResult.setText(textString);
+            String phone = contact.getPhone();
+            SpannableStringBuilder phoneStr = TextUtil.highlight(mActivity, phone, keyword);
+            holder.mTvResultPhone.setText(phoneStr);
         }
 
         @Override
@@ -282,14 +285,27 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
             return result.size();
         }
 
-        static class SearchHolder extends RecyclerView.ViewHolder {
+        class SearchHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
-            @Bind(R.id.tv_result)
-            TextView mTvResult;
+            @Bind(R.id.tv_result_name)
+            TextView mTvResultName;
+            @Bind(R.id.tv_result_phone)
+            TextView mTvResultPhone;
 
             public SearchHolder(View itemView) {
                 super(itemView);
                 ButterKnife.bind(this, itemView);
+
+                itemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mActivity, DetailActivity.class);
+                int position = getAdapterPosition();
+                Contact contact = result.get(position);
+                intent.putExtra("CONTACT", contact);
+                mActivity.startActivity(intent);
             }
         }
     }
