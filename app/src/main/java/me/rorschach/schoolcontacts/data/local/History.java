@@ -18,10 +18,10 @@ public class History extends BaseModel {
     long id;
 
     @Column
-    long contactsId;
+    String name;
 
-    @Column(typeConverter = ContactTypeConverter.class)
-    ContactType contactType;
+    @Column
+    String phone;
 
     @Column(typeConverter = DateTimeConverter.class)
     DateTime beginTime;
@@ -33,11 +33,11 @@ public class History extends BaseModel {
     public String toString() {
         return "History{" +
                 "id=" + id +
-                ", contactsId=" + contactsId +
-                ", contactType=" + contactType +
+                ", name='" + name + '\'' +
+                ", phone='" + phone + '\'' +
                 ", beginTime=" + beginTime +
                 ", endTime=" + endTime +
-                "}\n";
+                '}';
     }
 
     public long getId() {
@@ -48,20 +48,20 @@ public class History extends BaseModel {
         this.id = id;
     }
 
-    public long getContactsId() {
-        return contactsId;
+    public String getName() {
+        return name;
     }
 
-    public void setContactsId(long contactsId) {
-        this.contactsId = contactsId;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public ContactType getContactType() {
-        return contactType;
+    public String getPhone() {
+        return phone;
     }
 
-    public void setContactType(ContactType contactType) {
-        this.contactType = contactType;
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public DateTime getBeginTime() {

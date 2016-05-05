@@ -21,9 +21,9 @@ public interface HistoryContract {
 
         void showNoHistory();
 
-        void showAddHistory();
+        void showAddHistory(History history);
 
-        void showDeleteHistory();
+        void showDeleteHistory(History history);
 
         boolean isActive();
     }

@@ -129,6 +129,7 @@ public class StarFragment extends Fragment implements StarContract.View {
 
     public static class StarAdapter extends RecyclerView.Adapter<StarAdapter.StarHolder> {
 
+
         private Activity mActivity;
         private List<Contact> mStared;
 
@@ -140,14 +141,15 @@ public class StarFragment extends Fragment implements StarContract.View {
         @Override
         public StarHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = mActivity.getLayoutInflater();
-            final View view = inflater.inflate(R.layout.item_contacts, parent, false);
+            final View view = inflater.inflate(R.layout.item_star, parent, false);
             return new StarHolder(view);
         }
 
         @Override
         public void onBindViewHolder(StarHolder holder, int position) {
             Contact contact = mStared.get(position);
-            holder.mTvContacts.setText(contact.getName() + " - " + contact.getPhone());
+            holder.mTvStarName.setText(contact.getName());
+//            holder.mTvStarCollege.setText(contact.getCollege());
         }
 
         @Override
@@ -157,8 +159,10 @@ public class StarFragment extends Fragment implements StarContract.View {
 
         class StarHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-            @Bind(R.id.tv_contacts)
-            TextView mTvContacts;
+            @Bind(R.id.tv_star_name)
+            TextView mTvStarName;
+//            @Bind(R.id.tv_star_college)
+//            TextView mTvStarCollege;
 
             public StarHolder(View itemView) {
                 super(itemView);

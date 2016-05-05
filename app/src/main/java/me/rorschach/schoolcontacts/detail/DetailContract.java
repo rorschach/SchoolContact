@@ -3,6 +3,8 @@ package me.rorschach.schoolcontacts.detail;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import org.joda.time.DateTime;
+
 import java.util.List;
 
 import me.rorschach.schoolcontacts.base.BasePresenter;
@@ -23,10 +25,6 @@ public interface DetailContract {
 
         boolean isActive();
 
-        void onCall();
-
-        void onSms();
-
         void onUpdate();
 
         void onDelete();
@@ -40,13 +38,12 @@ public interface DetailContract {
 
     interface Presenter extends BasePresenter {
 
-        void addRecord(@NonNull Contact contact);
+        void addRecord(@NonNull String name,
+                       @NonNull String phone,
+                       @NonNull DateTime startTime,
+                       @NonNull DateTime endTime);
 
-        void loadRecord(@NonNull Contact contact);
-
-        void call(@NonNull String phone);
-
-        void sendSms(@NonNull String phone);
+        void loadRecord(@NonNull String phone);
 
         void update(@NonNull Contact contact);
 

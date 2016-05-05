@@ -39,6 +39,7 @@ public class HistoryPresenter implements HistoryContract.Presenter {
         mView = null;
     }
 
+    @DebugLog
     @Override
     public void loadHistories() {
         Observable
@@ -79,13 +80,14 @@ public class HistoryPresenter implements HistoryContract.Presenter {
                 );
     }
 
+    @DebugLog
     @Override
     public void addToHistory(@NonNull History history) {
 
         mRepository.add(history);
 
         if (mView.isActive()) {
-            mView.showAddHistory();
+            mView.showAddHistory(history);
         }
     }
 
@@ -95,7 +97,7 @@ public class HistoryPresenter implements HistoryContract.Presenter {
         mRepository.remove(history);
 
         if (mView.isActive()) {
-            mView.showDeleteHistory();
+            mView.showDeleteHistory(history);
         }
     }
 

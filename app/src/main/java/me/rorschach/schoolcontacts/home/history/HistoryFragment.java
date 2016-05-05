@@ -2,6 +2,8 @@ package me.rorschach.schoolcontacts.home.history;
 
 
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,6 +12,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import org.joda.time.DateTime;
+import org.joda.time.Minutes;
+import org.joda.time.Seconds;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -62,11 +68,22 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
         mRvHistory.setAdapter(mHistoryAdapter);
     }
 
+    private static History mHistory;
+
     @Override
     public void onResume() {
         super.onResume();
 
         if (mPresenter != null) {
+
+            if (mHistory != null) {
+                DateTime endTime = new DateTime();
+                mHistory.setEndTime(endTime);
+                mPresenter.addToHistory(mHistory);
+
+                mHistory = null;
+            }
+
             mPresenter.start();
         }
     }
@@ -101,24 +118,28 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
     @DebugLog
     @Override
     public void showHistories(List<History> histories) {
-        this.mHistories.clear();
-        this.mHistories.addAll(histories);
+        mHistories.clear();
+        mHistories.addAll(histories);
         mHistoryAdapter.notifyDataSetChanged();
     }
 
+    @DebugLog
     @Override
     public void showNoHistory() {
 
     }
 
+    @DebugLog
     @Override
-    public void showAddHistory() {
-
+    public void showAddHistory(History history) {
+        mHistories.add(history);
+        mHistoryAdapter.notifyDataSetChanged();
     }
 
     @Override
-    public void showDeleteHistory() {
-
+    public void showDeleteHistory(History history) {
+        mHistories.remove(history);
+        mHistoryAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -148,11 +169,24 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
         public void onBindViewHolder(HistoryHolder holder, int position) {
             History history = mHistories.get(position);
 
-            String name = history.getId() + "";
+            DateTime start = history.getBeginTime();
+            DateTime end = history.getEndTime();
+            int minDiff = Minutes.minutesBetween(start, end).getMinutes();
+            int secDiff = Seconds.secondsBetween(start, end).getSeconds();
+
+            String diff;
+
+            if (minDiff != 0) {
+                diff = minDiff + "分" + secDiff + "秒";
+            } else {
+                diff = secDiff + "秒";
+            }
+
+            String name = history.getName() + "  -  " + history.getPhone();
             holder.mTvHistoryName.setText(name);
 
             String time = history.getBeginTime().toString("yyyy-MM-dd HH:mm:ss EE", Locale.CHINESE);
-            holder.mTvHistoryTime.setText(time);
+            holder.mTvHistoryTime.setText(time + "  -  " + diff);
         }
 
         @Override
@@ -160,7 +194,7 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
             return mHistories.size();
         }
 
-        class HistoryHolder extends RecyclerView.ViewHolder {
+        class HistoryHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
             @Bind(R.id.tv_history_name)
             TextView mTvHistoryName;
@@ -170,6 +204,29 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
             public HistoryHolder(View itemView) {
                 super(itemView);
                 ButterKnife.bind(this, itemView);
+
+                itemView.setOnClickListener(this);
+            }
+
+            @Override
+            public void onClick(View v) {
+                int position = getAdapterPosition();
+                History history = mHistories.get(position);
+
+                Uri uri = Uri.parse("tel:" + history.getPhone());
+                Intent intent = new Intent(Intent.ACTION_CALL, uri);
+
+                mHistory = new History();
+                mHistory.setName(history.getName());
+                mHistory.setPhone(history.getPhone());
+                DateTime startTime = new DateTime();
+                mHistory.setBeginTime(startTime);
+
+                try {
+                    mActivity.startActivity(intent);
+                } catch (SecurityException e) {
+                    e.printStackTrace();
+                }
             }
         }
 

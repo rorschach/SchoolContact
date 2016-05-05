@@ -49,6 +49,31 @@ public class Contact extends BaseModel implements Serializable {
                 "}\n";
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Contact contact = (Contact) o;
+
+        if (id != contact.id) return false;
+        if (!name.equals(contact.name)) return false;
+        if (!phone.equals(contact.phone)) return false;
+        if (!college.equals(contact.college)) return false;
+        return stared.equals(contact.stared);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (id ^ (id >>> 32));
+        result = 31 * result + name.hashCode();
+        result = 31 * result + phone.hashCode();
+        result = 31 * result + college.hashCode();
+        result = 31 * result + stared.hashCode();
+        return result;
+    }
+
     public long getId() {
         return id;
     }

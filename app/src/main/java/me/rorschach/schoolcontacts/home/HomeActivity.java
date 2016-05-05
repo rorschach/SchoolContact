@@ -147,7 +147,7 @@ public class HomeActivity extends AppCompatActivity {
     private void test() {
 //        importFromFile(null);
 
-//        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
 
 //        Intent intent = new Intent();
 //        intent.setAction(Intent.ACTION_SENDTO);

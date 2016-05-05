@@ -4,6 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="@android:color/darker_gray"
     android:layout_height="match_parent"
     android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
@@ -14,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_margin="12dp"
-        android:background="@drawable/bg_detail_dial"
+        android:background="@drawable/bg_container"
         android:elevation="4dp"
         android:orientation="horizontal"
         android:padding="4dp">
@@ -52,6 +53,7 @@
     </LinearLayout>
 
     <android.support.v7.widget.RecyclerView
+        android:elevation="4dp"
         android:id="@+id/rv_record_detail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

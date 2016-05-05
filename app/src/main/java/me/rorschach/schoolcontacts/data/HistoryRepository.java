@@ -86,9 +86,10 @@ public class HistoryRepository implements Repository<History> {
                 .queryList();
     }
 
-    public List<History> loadLast() {
+    public List<History> loadLast(String phone) {
         return SQLite.select()
                 .from(History.class)
+                .where(History_Table.phone.eq(phone))
                 .orderBy(OrderBy.fromProperty(History_Table.id).descending())
                 .limit(5)
                 .queryList();

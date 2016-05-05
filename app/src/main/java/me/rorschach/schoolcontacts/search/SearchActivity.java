@@ -275,6 +275,8 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
             SpannableStringBuilder nameStr = TextUtil.highlight(mActivity, name, keyword);
             holder.mTvResultName.setText(nameStr);
 
+            holder.mTvResultCollege.setText(contact.getCollege());
+
             String phone = contact.getPhone();
             SpannableStringBuilder phoneStr = TextUtil.highlight(mActivity, phone, keyword);
             holder.mTvResultPhone.setText(phoneStr);
@@ -289,6 +291,8 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
 
             @Bind(R.id.tv_result_name)
             TextView mTvResultName;
+            @Bind(R.id.tv_result_college)
+            TextView mTvResultCollege;
             @Bind(R.id.tv_result_phone)
             TextView mTvResultPhone;
 

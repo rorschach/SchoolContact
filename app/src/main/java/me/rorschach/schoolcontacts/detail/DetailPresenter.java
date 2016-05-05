@@ -1,8 +1,5 @@
 package me.rorschach.schoolcontacts.detail;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -14,9 +11,7 @@ import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.HistoryRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
-import me.rorschach.schoolcontacts.data.local.ContactType;
 import me.rorschach.schoolcontacts.data.local.History;
-import me.rorschach.schoolcontacts.data.local.History_Table;
 import rx.Single;
 import rx.SingleSubscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -31,9 +26,9 @@ public class DetailPresenter implements DetailContract.Presenter {
     private HistoryRepository mHistoryRepository;
     private DetailContract.View mView;
 
-    private static final String TAG = "DetailPresenter";
-
     private DateTime startTime;
+
+    private static final String TAG = "DetailPresenter";
 
     public DetailPresenter(@NonNull ContactRepository contactRepository,
                            @NonNull HistoryRepository historyRepository,
@@ -45,18 +40,22 @@ public class DetailPresenter implements DetailContract.Presenter {
         mView.setPresenter(this);
     }
 
+    @DebugLog
     @Override
-    public void addRecord(@NonNull final Contact contact) {
+    public void addRecord(@NonNull final String name,
+                          @NonNull final String phone,
+                          @NonNull final DateTime startTime,
+                          @NonNull final DateTime endTime) {
         Single
                 .create(new Single.OnSubscribe<History>() {
                     @Override
                     public void call(SingleSubscriber<? super History> singleSubscriber) {
 
                         History history = new History();
-                        history.setContactsId(contact.getId());
-                        history.setContactType(ContactType.PHONE);
+                        history.setName(name);
+                        history.setPhone(phone);
                         history.setBeginTime(startTime);
-                        history.setEndTime(new DateTime());
+                        history.setEndTime(endTime);
 
                         mHistoryRepository.add(history);
 
@@ -82,15 +81,15 @@ public class DetailPresenter implements DetailContract.Presenter {
                 });
     }
 
+    @DebugLog
     @Override
-    public void loadRecord(@NonNull final Contact contact) {
+    public void loadRecord(@NonNull final String phone) {
         Single
                 .create(new Single.OnSubscribe<List<History>>() {
                     @Override
                     public void call(SingleSubscriber<? super List<History>> singleSubscriber) {
 
-                        List<History> histories = mHistoryRepository
-                                .queryList(History.class, History_Table.contactsId.eq(contact.getId()));
+                        List<History> histories = mHistoryRepository.loadLast(phone);
 
                         singleSubscriber.onSuccess(histories);
                     }
@@ -114,33 +113,6 @@ public class DetailPresenter implements DetailContract.Presenter {
                         Log.e(TAG, "onError: " + error.getMessage());
                     }
                 });
-    }
-
-
-    @Override
-    public void call(@NonNull String phone) {
-
-        Uri uri = Uri.parse("tel:" + phone);
-        Intent intent = new Intent(Intent.ACTION_CALL, uri);
-        try {
-            ((Activity) mView.getContext()).startActivityForResult(intent, 0x00);
-            startTime = new DateTime();
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void sendSms(@NonNull String phone) {
-
-        Uri uri = Uri.parse("smsto:" + phone);
-        Intent intent = new Intent(Intent.ACTION_SENDTO, uri);
-        intent.putExtra("exit_on_sent", true);
-        try {
-            mView.getContext().startActivity(intent);
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        }
     }
 
     @DebugLog
