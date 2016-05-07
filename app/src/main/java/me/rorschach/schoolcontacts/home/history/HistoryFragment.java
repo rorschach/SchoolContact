@@ -126,7 +126,8 @@ public class HistoryFragment extends Fragment implements HistoryContract.View {
     @DebugLog
     @Override
     public void showNoHistory() {
-
+        mHistories.clear();
+        mHistoryAdapter.notifyDataSetChanged();
     }
 
     @DebugLog

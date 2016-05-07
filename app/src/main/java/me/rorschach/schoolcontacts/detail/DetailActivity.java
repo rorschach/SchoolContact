@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -105,6 +104,7 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
         mContact = (Contact) intent.getSerializableExtra("CONTACT");
 
         mActionBar.setTitle(mContact.getName());
+        mActionBar.setSubtitle(mContact.getCollege());
         mTvDetailPhone.setText(mContact.getPhone());
 
         if (mPresenter != null) {
@@ -187,10 +187,14 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
 
                 break;
             case R.id.action_delete:
-
+                if (mPresenter != null) {
+                    mPresenter.delete(mContact);
+                }
                 break;
             case R.id.action_share:
-
+                if (mPresenter != null) {
+                    mPresenter.share(mContact);
+                }
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -221,11 +225,6 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
     }
 
     @Override
-    public void showDetail(@NonNull Contact contact) {
-
-    }
-
-    @Override
     public Context getContext() {
         WeakReference<Activity> reference = new WeakReference<Activity>(this);
         return reference.get();
@@ -241,9 +240,10 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
         invalidateOptionsMenu();
     }
 
+    @DebugLog
     @Override
     public void onDelete() {
-
+        onBackPressed();
     }
 
     @Override
@@ -315,7 +315,7 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
             DateTime start = history.getBeginTime();
             DateTime end = history.getEndTime();
             int minDiff = Minutes.minutesBetween(start, end).getMinutes();
-            int secDiff = Seconds.secondsBetween(start, end).getSeconds();
+            int secDiff = Seconds.secondsBetween(start, end).getSeconds() % 60;
 
             String diff;
             if (minDiff != 0) {

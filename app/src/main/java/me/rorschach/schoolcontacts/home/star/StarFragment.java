@@ -109,7 +109,8 @@ public class StarFragment extends Fragment implements StarContract.View {
 
     @Override
     public void showNoStar() {
-
+        mStared.clear();
+        mStarAdapter.notifyDataSetChanged();
     }
 
     @Override

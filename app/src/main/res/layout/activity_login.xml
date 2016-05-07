@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg"
+    tools:context="me.rorschach.schoolcontacts.login.LoginActivity">
+
+    <me.rorschach.schoolcontacts.MaterialLockView
+        android:id="@+id/lock_view"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:CORRECT_COLOR="#00ff00"
+        app:LOCK_COLOR="#fff"
+        app:WRONG_COLOR="#ff0000"/>
+
+</FrameLayout>

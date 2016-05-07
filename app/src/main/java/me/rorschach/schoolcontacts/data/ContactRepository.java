@@ -55,6 +55,7 @@ public class ContactRepository implements Repository<Contact> {
         }
     }
 
+    @DebugLog
     @Override
     public void remove(Contact item) {
         if (item.exists()) {
@@ -74,6 +75,11 @@ public class ContactRepository implements Repository<Contact> {
 
     @DebugLog
     public void saveAll(List<Contact> contacts) {
+
+//        for (Contact contact : contacts) {
+//            contact.save();
+//        }
+
         TransactionManager.getInstance()
                 .addTransaction(
                         new SaveModelTransaction<>(
@@ -115,5 +121,13 @@ public class ContactRepository implements Repository<Contact> {
                 .where(Contact_Table.name.like("%" + keyword + "%"))
                 .or(Contact_Table.phone.like("%" + keyword + "%"))
                 .queryList();
+    }
+
+    public long deleteAll() {
+        return SQLite.delete(Contact.class).count();
+    }
+
+    public List<Contact> loadAll() {
+        return SQLite.select().from(Contact.class).queryList();
     }
 }

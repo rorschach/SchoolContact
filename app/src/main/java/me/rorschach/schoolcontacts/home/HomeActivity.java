@@ -2,11 +2,9 @@ package me.rorschach.schoolcontacts.home;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -24,8 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import org.xmlpull.v1.XmlPullParser;
-
+import java.io.IOException;
 import java.util.List;
 
 import butterknife.Bind;
@@ -43,12 +40,13 @@ import me.rorschach.schoolcontacts.home.star.StarFragment;
 import me.rorschach.schoolcontacts.home.star.StarPresenter;
 import me.rorschach.schoolcontacts.search.SearchActivity;
 import me.rorschach.schoolcontacts.util.AccessStorageApi;
-import me.rorschach.schoolcontacts.util.IOUtil;
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.schedulers.Schedulers;
+
+import static me.rorschach.schoolcontacts.util.IOUtil.*;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -88,6 +86,8 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     CollegePresenter collegePresenter;
+    HistoryPresenter historyPresenter;
+    StarPresenter starPresenter;
 
     private void initView() {
 
@@ -108,14 +108,14 @@ public class HomeActivity extends AppCompatActivity {
         mTabs.getTabAt(1).setIcon(collegeDrawable);
         mTabs.getTabAt(2).setIcon(starDrawable);
 
-        HistoryPresenter historyPresenter = new HistoryPresenter(HistoryRepository.getInstance(), mHistoryFragment);
+        historyPresenter = new HistoryPresenter(HistoryRepository.getInstance(), mHistoryFragment);
         collegePresenter = new CollegePresenter(ContactRepository.getInstance(), mCollegeFragment);
-        StarPresenter starPresenter = new StarPresenter(ContactRepository.getInstance(), mStarFragment);
+        starPresenter = new StarPresenter(ContactRepository.getInstance(), mStarFragment);
 
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                test();
+                startActivity(new Intent(HomeActivity.this, SearchActivity.class));
             }
         });
     }
@@ -133,73 +133,94 @@ public class HomeActivity extends AppCompatActivity {
             case R.id.action_search:
                 startActivity(new Intent(HomeActivity.this, SearchActivity.class));
                 break;
-            case R.id.action_update:
-                chooseFile();
+            case R.id.action_import_vcf:
+//                chooseFile();
                 break;
-            case R.id.action_export:
+            case R.id.action_update_all:
+                chooseFile(UPDATE_ALL);
                 break;
-            case R.id.action_settings:
+            case R.id.action_export_vcf:
+                exportAll2VcfFile();
+                break;
+            case R.id.action_export_xml:
+                exportAll2XmlFile();
+                break;
+            case R.id.action_clear:
+                historyPresenter.clearAllHistory();
+                break;
+            default:
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void test() {
-//        importFromFile(null);
+    public static final int IMPORT_VCF = 0x00;
+    public static final int UPDATE_ALL = 0x01;
 
-        startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+    private void chooseFile(int flag) {
 
-//        Intent intent = new Intent();
-//        intent.setAction(Intent.ACTION_SENDTO);
-//        Uri uri = Uri.parse("smsto:"+"18370998101;18370995001");
-//        intent.setData(uri);
-//        intent.putExtra("sms_body", "test");
-//        startActivity(intent);
-    }
+//        SharedPreferences sp = this.getSharedPreferences("backup", MODE_PRIVATE);
+//        String path = sp.getString("BACKUP_PATH",
+//                Environment.getExternalStorageDirectory().getPath() + "/GnnuContact/");
 
-    private void chooseFile() {
-
-        SharedPreferences sp = this.getSharedPreferences("backup", MODE_PRIVATE);
-        String path = sp.getString("BACKUP_PATH",
-                Environment.getExternalStorageDirectory().getPath() + "/GnnuContact/");
+        String path = null;
+        try {
+            path = getUpdateXmlFilePath(HomeActivity.this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_GET_CONTENT);
-//        Uri uri = Uri.parse("/storage/emulated/0/Download/");
-//        intent.setDataAndType(uri, "application/vnd.android.package-archive");
         Uri uri = Uri.parse(path);
         intent.setDataAndType(uri, "text/xml");
-//        intent.setType("*/*");
-        startActivityForResult(Intent.createChooser(intent, "请选择备份文件"), 0x01);
+        startActivityForResult(Intent.createChooser(intent, "请选择备份文件"), flag);
     }
 
     private static final String TAG = "TAG";
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 0x01 && resultCode == Activity.RESULT_OK) {
+        if (requestCode == UPDATE_ALL && resultCode == Activity.RESULT_OK) {
             Uri uri = data.getData();
             Log.d(TAG, "onActivityResult: " + uri.toString());
 
             String path = AccessStorageApi.getPath(this, uri);
             Log.d(TAG, "onActivityResult: " + path);
 
-//            XmlPullParser xpp = Xml.newPullParser();
-//            xpp.setInput(new FileInputStream(path));
+            updateAllFromXmlFile(path);
+        } else if (requestCode == IMPORT_VCF && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+            Log.d(TAG, "onActivityResult: " + uri.toString());
+
+            String path = AccessStorageApi.getPath(this, uri);
+            Log.d(TAG, "onActivityResult: " + path);
+
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void importFromFile(String path) {
+    private void updateAllFromXmlFile(final String path) {
         Observable
                 .create(new Observable.OnSubscribe<List<Contact>>() {
                     @Override
                     public void call(Subscriber<? super List<Contact>> subscriber) {
-                        XmlPullParser xpp = getResources().getXml(R.xml.gnnu);
-                        ContactRepository repository = ContactRepository.getInstance();
 
-                        List<Contact> contacts = IOUtil.parseXml(xpp);
-                        repository.saveAll(contacts);
+                        ContactRepository contactRepository = ContactRepository.getInstance();
+                        HistoryRepository historyRepository = HistoryRepository.getInstance();
+
+                        contactRepository.deleteAll();
+                        historyRepository.deleteAll();
+
+                        List<Contact> contacts = null;
+
+                        try {
+                            contacts = importFromXmlBackup(path);
+                        } catch (Exception e) {
+                            subscriber.onError(e);
+                        }
+
+                        ContactRepository.getInstance().saveAll(contacts);
 
                         subscriber.onNext(contacts);
                         subscriber.onCompleted();
@@ -210,7 +231,7 @@ public class HomeActivity extends AppCompatActivity {
                 .doOnSubscribe(new Action0() {
                     @Override
                     public void call() {
-                        Toast.makeText(HomeActivity.this, "start...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(HomeActivity.this, "updateAllFromXmlFile start...", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .subscribeOn(AndroidSchedulers.mainThread())
@@ -219,7 +240,7 @@ public class HomeActivity extends AppCompatActivity {
                 .subscribe(new Subscriber<List<Contact>>() {
                     @Override
                     public void onCompleted() {
-                        Toast.makeText(HomeActivity.this, "success!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(HomeActivity.this, "updateAllFromXmlFile success!", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -231,7 +252,105 @@ public class HomeActivity extends AppCompatActivity {
                     @Override
                     public void onNext(List<Contact> contacts) {
                         Log.d("TAG", "size : " + contacts.size());
+
                         collegePresenter.loadColleges();
+                        starPresenter.loadStars();
+                        historyPresenter.loadHistories();
+                    }
+                });
+    }
+
+    private void exportAll2XmlFile() {
+        Observable
+                .create(new Observable.OnSubscribe<List<Contact>>() {
+                    @Override
+                    public void call(Subscriber<? super List<Contact>> subscriber) {
+
+                        List<Contact> contacts = ContactRepository.getInstance().queryList(Contact.class);
+
+                        try {
+                            export2XmlFile(HomeActivity.this, contacts, ALL);
+                        } catch (IOException e) {
+                            subscriber.onError(e);
+                        }
+
+                        subscriber.onNext(contacts);
+                        subscriber.onCompleted();
+                    }
+                })
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        Toast.makeText(HomeActivity.this, "exportAll2XmlFile start...", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .subscribeOn(AndroidSchedulers.mainThread())
+
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<Contact>>() {
+                    @Override
+                    public void onCompleted() {
+                        Toast.makeText(HomeActivity.this, "exportAll2XmlFile success!", Toast.LENGTH_SHORT).show();
+                        chooseFile(0x03);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d("TAG", e.getMessage());
+                        Toast.makeText(HomeActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(List<Contact> contacts) {
+                        Log.d("TAG", "size : " + contacts.size());
+
+                    }
+                });
+    }
+
+    private void exportAll2VcfFile() {
+        Observable
+                .create(new Observable.OnSubscribe<List<Contact>>() {
+                    @Override
+                    public void call(Subscriber<? super List<Contact>> subscriber) {
+
+                        List<Contact> contacts = ContactRepository.getInstance().queryList(Contact.class);
+
+                        try {
+                            export2VcfFile(HomeActivity.this, contacts, ALL);
+                        } catch (IOException e) {
+                            subscriber.onError(e);
+                        }
+
+                        subscriber.onNext(contacts);
+                        subscriber.onCompleted();
+                    }
+                })
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        Toast.makeText(HomeActivity.this, "exportAll2VcfFile start...", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .subscribeOn(AndroidSchedulers.mainThread())
+
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<Contact>>() {
+                    @Override
+                    public void onCompleted() {
+                        Toast.makeText(HomeActivity.this, "exportAll2VcfFile success!", Toast.LENGTH_SHORT).show();
+                        chooseFile(0x03);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d("TAG", e.getMessage());
+                        Toast.makeText(HomeActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(List<Contact> contacts) {
+                        Log.d("TAG", "size : " + contacts.size());
                     }
                 });
     }
@@ -262,7 +381,6 @@ public class HomeActivity extends AppCompatActivity {
         public int getCount() {
             return 3;
         }
-
 
 
 //        @Override

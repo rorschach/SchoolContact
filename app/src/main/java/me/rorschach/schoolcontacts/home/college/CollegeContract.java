@@ -12,6 +12,8 @@ public interface CollegeContract {
 
     interface View extends BaseView<Presenter> {
 
+        void showNoCollege();
+
         void setLoadingIndicator(boolean active);
 
         void showColleges(List<String> colleges);

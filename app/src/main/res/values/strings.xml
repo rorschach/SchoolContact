@@ -10,6 +10,16 @@
     <string name="title_activity_contacts">ContactsActivity</string>
     <string name="title_activity_detail">DetailActivity</string>
 
+    <string name="action_search">搜索</string>
+    <string name="action_import_vcf">导入.vcf</string>
+    <string name="action_update_all">更新所有</string>
+    <string name="action_export_vcf">导出到.vcf</string>
+    <string name="action_export_xml">导出到xml</string>
+    <string name="action_clear">清除拨号记录</string>
+
+    <string name="action_share_list_xml">导出当前部门/学院为.xml文件</string>
+    <string name="action_share_list_vcf">导出当前部门/学院为.vcf文件</string>
+
     <string name="action_star">收藏</string>
     <string name="action_edit">编辑</string>
     <string name="action_delete">删除此联系人</string>

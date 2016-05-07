@@ -1,10 +1,13 @@
 package me.rorschach.schoolcontacts.detail;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.joda.time.DateTime;
 
+import java.io.IOException;
 import java.util.List;
 
 import hugo.weaving.DebugLog;
@@ -12,6 +15,7 @@ import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.HistoryRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
 import me.rorschach.schoolcontacts.data.local.History;
+import me.rorschach.schoolcontacts.util.IOUtil;
 import rx.Single;
 import rx.SingleSubscriber;
 import rx.android.schedulers.AndroidSchedulers;
@@ -25,8 +29,6 @@ public class DetailPresenter implements DetailContract.Presenter {
     private ContactRepository mContactRepository;
     private HistoryRepository mHistoryRepository;
     private DetailContract.View mView;
-
-    private DateTime startTime;
 
     private static final String TAG = "DetailPresenter";
 
@@ -46,22 +48,21 @@ public class DetailPresenter implements DetailContract.Presenter {
                           @NonNull final String phone,
                           @NonNull final DateTime startTime,
                           @NonNull final DateTime endTime) {
-        Single
-                .create(new Single.OnSubscribe<History>() {
-                    @Override
-                    public void call(SingleSubscriber<? super History> singleSubscriber) {
+        Single.create(new Single.OnSubscribe<History>() {
+            @Override
+            public void call(SingleSubscriber<? super History> singleSubscriber) {
 
-                        History history = new History();
-                        history.setName(name);
-                        history.setPhone(phone);
-                        history.setBeginTime(startTime);
-                        history.setEndTime(endTime);
+                History history = new History();
+                history.setName(name);
+                history.setPhone(phone);
+                history.setBeginTime(startTime);
+                history.setEndTime(endTime);
 
-                        mHistoryRepository.add(history);
+                mHistoryRepository.add(history);
 
-                        singleSubscriber.onSuccess(history);
-                    }
-                })
+                singleSubscriber.onSuccess(history);
+            }
+        })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new SingleSubscriber<History>() {
@@ -84,16 +85,15 @@ public class DetailPresenter implements DetailContract.Presenter {
     @DebugLog
     @Override
     public void loadRecord(@NonNull final String phone) {
-        Single
-                .create(new Single.OnSubscribe<List<History>>() {
-                    @Override
-                    public void call(SingleSubscriber<? super List<History>> singleSubscriber) {
+        Single.create(new Single.OnSubscribe<List<History>>() {
+            @Override
+            public void call(SingleSubscriber<? super List<History>> singleSubscriber) {
 
-                        List<History> histories = mHistoryRepository.loadLast(phone);
+                List<History> histories = mHistoryRepository.loadLast(phone);
 
-                        singleSubscriber.onSuccess(histories);
-                    }
-                })
+                singleSubscriber.onSuccess(histories);
+            }
+        })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new SingleSubscriber<List<History>>() {
@@ -118,15 +118,14 @@ public class DetailPresenter implements DetailContract.Presenter {
     @DebugLog
     @Override
     public void update(final Contact contact) {
-        Single
-                .create(new Single.OnSubscribe<Contact>() {
-                    @Override
-                    public void call(SingleSubscriber<? super Contact> singleSubscriber) {
-                        mContactRepository.update(contact);
+        Single.create(new Single.OnSubscribe<Contact>() {
+            @Override
+            public void call(SingleSubscriber<? super Contact> singleSubscriber) {
+                mContactRepository.update(contact);
 
-                        singleSubscriber.onSuccess(contact);
-                    }
-                })
+                singleSubscriber.onSuccess(contact);
+            }
+        })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new SingleSubscriber<Contact>() {
@@ -146,15 +145,14 @@ public class DetailPresenter implements DetailContract.Presenter {
 
     @Override
     public void delete(final Contact contact) {
-        Single
-                .create(new Single.OnSubscribe<Contact>() {
-                    @Override
-                    public void call(SingleSubscriber<? super Contact> singleSubscriber) {
-                        mContactRepository.remove(contact);
+        Single.create(new Single.OnSubscribe<Contact>() {
+            @Override
+            public void call(SingleSubscriber<? super Contact> singleSubscriber) {
+                mContactRepository.remove(contact);
 
-                        singleSubscriber.onSuccess(contact);
-                    }
-                })
+                singleSubscriber.onSuccess(contact);
+            }
+        })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new SingleSubscriber<Contact>() {
@@ -162,6 +160,52 @@ public class DetailPresenter implements DetailContract.Presenter {
                     public void onSuccess(Contact contact1) {
                         if (mView.isActive()) {
                             mView.onDelete();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        Log.e(TAG, "onError: " + error.getMessage());
+                    }
+                });
+    }
+
+    @DebugLog
+    @Override
+    public void share(@NonNull final Contact contact) {
+        Single
+                .create(new Single.OnSubscribe<String>() {
+                    @Override
+                    public void call(SingleSubscriber<? super String> singleSubscriber) {
+
+                        String path = "/";
+
+                        try {
+                            path = IOUtil.getSingleVcfFile(mView.getContext(), contact);
+
+                            IOUtil.export2VcfFile(contact, path);
+
+                        } catch (IOException e) {
+                            singleSubscriber.onError(e);
+                        }
+
+                        singleSubscriber.onSuccess(path);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleSubscriber<String>() {
+                    @Override
+                    public void onSuccess(String value) {
+                        if (mView.isActive()) {
+
+                            Log.d(TAG, "onSuccess: " + value);
+                            Uri uri = Uri.parse(value);
+
+                            Intent intent = new Intent(Intent.ACTION_SEND);
+                            intent.setType("text/x-vcard");
+                            intent.putExtra(Intent.EXTRA_STREAM, uri);
+                            mView.getContext().startActivity(Intent.createChooser(intent, "分享当前联系人"));
                         }
                     }
 

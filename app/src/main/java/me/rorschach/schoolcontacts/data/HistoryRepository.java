@@ -95,4 +95,8 @@ public class HistoryRepository implements Repository<History> {
                 .queryList();
     }
 
+    public long deleteAll() {
+        return SQLite.delete(History.class).count();
+    }
+
 }

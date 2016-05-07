@@ -19,8 +19,6 @@ public interface DetailContract {
 
     interface View extends BaseView<Presenter> {
 
-        void showDetail(@NonNull Contact contact);
-
         Context getContext();
 
         boolean isActive();
@@ -48,6 +46,8 @@ public interface DetailContract {
         void update(@NonNull Contact contact);
 
         void delete(@NonNull Contact contact);
+
+        void share(@NonNull Contact contact);
 
     }
 }

@@ -3,7 +3,6 @@ package me.rorschach.schoolcontacts.search;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -48,8 +47,8 @@ public class SearchActivity extends AppCompatActivity implements SearchContract.
     Toolbar mToolbar;
     @Bind(R.id.rv_search)
     RecyclerView mRvSearch;
-    @Bind(R.id.fab)
-    FloatingActionButton mFab;
+//    @Bind(R.id.fab)
+//    FloatingActionButton mFab;
     @Bind(R.id.tv_empty)
     TextView mTvEmpty;
 

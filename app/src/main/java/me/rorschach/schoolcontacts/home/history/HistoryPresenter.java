@@ -1,6 +1,7 @@
 package me.rorschach.schoolcontacts.home.history;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.List;
 
@@ -8,6 +9,8 @@ import hugo.weaving.DebugLog;
 import me.rorschach.schoolcontacts.data.HistoryRepository;
 import me.rorschach.schoolcontacts.data.local.History;
 import rx.Observable;
+import rx.Single;
+import rx.SingleSubscriber;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
@@ -16,6 +19,8 @@ import rx.schedulers.Schedulers;
  * Created by lei on 16-4-25.
  */
 public class HistoryPresenter implements HistoryContract.Presenter {
+
+    private static final String TAG = "HistoryPresenter";
 
     private HistoryRepository mRepository;
     private HistoryContract.View mView;
@@ -99,6 +104,35 @@ public class HistoryPresenter implements HistoryContract.Presenter {
         if (mView.isActive()) {
             mView.showDeleteHistory(history);
         }
+    }
+
+    public void clearAllHistory() {
+        mRepository.deleteAll();
+
+        Single
+                .create(new Single.OnSubscribe<Void>() {
+                    @Override
+                    public void call(SingleSubscriber<? super Void> singleSubscriber) {
+                        mRepository.deleteAll();
+
+                        singleSubscriber.onSuccess(null);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new SingleSubscriber<Void>() {
+                    @Override
+                    public void onSuccess(Void value) {
+                        if (mView.isActive()) {
+                            mView.showNoHistory();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        Log.e(TAG, "onError: " + error.getMessage());
+                    }
+                });
     }
 
 }

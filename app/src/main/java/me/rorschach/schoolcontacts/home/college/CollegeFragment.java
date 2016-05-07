@@ -105,6 +105,12 @@ public class CollegeFragment extends Fragment implements CollegeContract.View {
 
     }
 
+    @Override
+    public void showNoCollege() {
+        mColleges.clear();
+        mCollegeAdapter.notifyDataSetChanged();
+    }
+
     @DebugLog
     @Override
     public void showColleges(List<String> colleges) {

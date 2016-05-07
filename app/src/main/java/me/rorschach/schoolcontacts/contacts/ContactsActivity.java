@@ -2,10 +2,7 @@ package me.rorschach.schoolcontacts.contacts;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -20,9 +17,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +33,15 @@ import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
 import me.rorschach.schoolcontacts.detail.DetailActivity;
 import me.rorschach.schoolcontacts.search.SearchActivity;
-import me.rorschach.schoolcontacts.util.AccessStorageApi;
 import me.rorschach.schoolcontacts.util.HanziToPinyin;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action0;
+
+import static me.rorschach.schoolcontacts.util.IOUtil.COLLEGE;
+import static me.rorschach.schoolcontacts.util.IOUtil.export2VcfFile;
+import static me.rorschach.schoolcontacts.util.IOUtil.export2XmlFile;
 
 public class ContactsActivity extends AppCompatActivity implements ContactsContract.View {
 
@@ -45,6 +51,8 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
     FastScrollRecyclerView mRvContacts;
     @Bind(R.id.fab)
     FloatingActionButton mFab;
+
+    private static final String TAG = "ContactsActivity";
 
     private boolean isActive;
 
@@ -63,7 +71,6 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
 
         setPresenter(new ContactsPresenter(ContactRepository.getInstance(), this));
 
-        handleIntent();
     }
 
     private void handleIntent() {
@@ -76,6 +83,7 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
     }
 
     private void initView() {
+        mToolbar.inflateMenu(R.menu.menu_contacts);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(true);
@@ -88,13 +96,20 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
         WeakReference<Activity> reference = new WeakReference<Activity>(this);
         mAdapter = new ContactsAdapter(reference.get(), mContacts);
         mRvContacts.setAdapter(mAdapter);
+
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ContactsActivity.this, SearchActivity.class));
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-//        mPresenter.start();
+        handleIntent();
     }
 
     @Override
@@ -109,58 +124,113 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
 
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_home, menu);
+        inflater.inflate(R.menu.menu_contacts, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_search:
-                startActivity(new Intent(ContactsActivity.this, SearchActivity.class));
+            case R.id.action_share_list_xml:
+                exportCurrentCollege2Xml();
                 break;
-            case R.id.action_update:
-                chooseFile();
+
+            case R.id.action_share_list_vcf:
+                exportCurrentCollege2Vcf();
                 break;
-            case R.id.action_export:
-                break;
-            case R.id.action_settings:
+
+            default:
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void chooseFile() {
+    private void exportCurrentCollege2Xml() {
+        Observable
+                .create(new Observable.OnSubscribe<List<Contact>>() {
+                    @Override
+                    public void call(Subscriber<? super List<Contact>> subscriber) {
 
-        SharedPreferences sp = this.getSharedPreferences("backup", MODE_PRIVATE);
-        String path = sp.getString("BACKUP_PATH",
-                Environment.getExternalStorageDirectory().getPath() + "/GnnuContact/");
+                        try {
+                            export2XmlFile(ContactsActivity.this, mContacts, COLLEGE);
+                        } catch (IOException e) {
+                            subscriber.onError(e);
+                        }
 
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-//        Uri uri = Uri.parse("/storage/emulated/0/Download/");
-//        intent.setDataAndType(uri, "application/vnd.android.package-archive");
-        Uri uri = Uri.parse(path);
-        intent.setDataAndType(uri, "text/xml");
-//        intent.setType("*/*");
-        startActivityForResult(Intent.createChooser(intent, "请选择备份文件"), 0x01);
+                        subscriber.onNext(mContacts);
+                        subscriber.onCompleted();
+                    }
+                })
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        Toast.makeText(ContactsActivity.this, "exportCurrentCollege2Xml start...", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .subscribeOn(AndroidSchedulers.mainThread())
+
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<Contact>>() {
+                    @Override
+                    public void onCompleted() {
+                        Toast.makeText(ContactsActivity.this, "exportCurrentCollege2Xml success!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d("TAG", e.getMessage());
+                        Toast.makeText(ContactsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(List<Contact> contacts) {
+                        Log.d("TAG", "size : " + contacts.size());
+                    }
+                });
     }
 
-    private static final String TAG = "TAG";
+    private void exportCurrentCollege2Vcf() {
+        Observable
+                .create(new Observable.OnSubscribe<List<Contact>>() {
+                    @Override
+                    public void call(Subscriber<? super List<Contact>> subscriber) {
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 0x01 && resultCode == Activity.RESULT_OK) {
-            Uri uri = data.getData();
-            Log.d(TAG, "onActivityResult: " + uri.toString());
+                        try {
+                            export2VcfFile(ContactsActivity.this, mContacts, COLLEGE);
+                        } catch (IOException e) {
+                            subscriber.onError(e);
+                        }
 
-            String path = AccessStorageApi.getPath(this, uri);
-            Log.d(TAG, "onActivityResult: " + path);
+                        subscriber.onNext(mContacts);
+                        subscriber.onCompleted();
+                    }
+                })
+                .doOnSubscribe(new Action0() {
+                    @Override
+                    public void call() {
+                        Toast.makeText(ContactsActivity.this, "exportCurrentCollege2Vcf start...", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .subscribeOn(AndroidSchedulers.mainThread())
 
-//            XmlPullParser xpp = Xml.newPullParser();
-//            xpp.setInput(new FileInputStream(path));
-        }
-        super.onActivityResult(requestCode, resultCode, data);
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<List<Contact>>() {
+                    @Override
+                    public void onCompleted() {
+                        Toast.makeText(ContactsActivity.this, "exportCurrentCollege2Vcf success!", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d("TAG", e.getMessage());
+                        Toast.makeText(ContactsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onNext(List<Contact> contacts) {
+                        Log.d("TAG", "size : " + contacts.size());
+                    }
+                });
     }
 
     @Override
