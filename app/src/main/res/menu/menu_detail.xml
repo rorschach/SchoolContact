@@ -3,12 +3,12 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="me.rorschach.schoolcontacts.detail.DetailActivity">
 
-    <item
-        android:id="@+id/action_star"
-        android:icon="@drawable/ic_unstar_white_24dp"
-        android:orderInCategory="100"
-        android:title="@string/action_star"
-        app:showAsAction="always"/>
+    <!--<item-->
+        <!--android:id="@+id/action_star"-->
+        <!--android:icon="@drawable/ic_unstar_white_24dp"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="@string/action_star"-->
+        <!--app:showAsAction="always"/>-->
 
     <item
         android:icon="@drawable/ic_edit_white_24dp"

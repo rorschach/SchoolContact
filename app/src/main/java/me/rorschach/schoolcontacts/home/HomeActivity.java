@@ -133,9 +133,6 @@ public class HomeActivity extends AppCompatActivity {
             case R.id.action_search:
                 startActivity(new Intent(HomeActivity.this, SearchActivity.class));
                 break;
-            case R.id.action_import_vcf:
-//                chooseFile();
-                break;
             case R.id.action_update_all:
                 chooseFile(UPDATE_ALL);
                 break;

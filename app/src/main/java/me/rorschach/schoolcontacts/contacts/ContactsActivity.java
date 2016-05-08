@@ -63,7 +63,7 @@ public class ContactsActivity extends AppCompatActivity implements ContactsContr
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_contacs);
+        setContentView(R.layout.activity_contacts);
         ButterKnife.bind(this);
         initView();
 

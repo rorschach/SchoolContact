@@ -40,6 +40,7 @@ import me.rorschach.schoolcontacts.data.ContactRepository;
 import me.rorschach.schoolcontacts.data.HistoryRepository;
 import me.rorschach.schoolcontacts.data.local.Contact;
 import me.rorschach.schoolcontacts.data.local.History;
+import me.rorschach.schoolcontacts.edit.EditActivity;
 
 public class DetailActivity extends AppCompatActivity implements DetailContract.View {
 
@@ -56,9 +57,15 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
     @Bind(R.id.fab)
     FloatingActionButton mFab;
 
+    @BindDrawable(R.drawable.ic_unstar_white_24dp)
+    Drawable unStar;
+    @BindDrawable(R.drawable.ic_star_white_24dp)
+    Drawable star;
+
     private boolean isActive;
 
     private DetailContract.Presenter mPresenter;
+
     private List<History> mHistories;
 
     private RecordAdapter mRecordAdapter;
@@ -97,6 +104,18 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
         WeakReference<Activity> reference = new WeakReference<Activity>(this);
         mRecordAdapter = new RecordAdapter(reference.get(), mHistories);
         mRvRecordDetail.setAdapter(mRecordAdapter);
+
+        mFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean stared = mContact.isStared();
+                mContact.setStared(!stared);
+
+                if (mPresenter != null) {
+                    mPresenter.update(mContact);
+                }
+            }
+        });
     }
 
     private void handleIntent() {
@@ -106,6 +125,7 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
         mActionBar.setTitle(mContact.getName());
         mActionBar.setSubtitle(mContact.getCollege());
         mTvDetailPhone.setText(mContact.getPhone());
+        updateFab();
 
         if (mPresenter != null) {
             mPresenter.loadRecord(mContact.getPhone());
@@ -144,21 +164,6 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
         }
     }
 
-    @BindDrawable(R.drawable.ic_star_white_24dp)
-    Drawable star;
-
-    @BindDrawable(R.drawable.ic_unstar_white_24dp)
-    Drawable unStar;
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-
-        MenuItem menuItem = menu.findItem(R.id.action_star);
-        menuItem.setIcon(mContact.isStared() ? star : unStar);
-
-        return super.onPrepareOptionsMenu(menu);
-    }
-
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_detail, menu);
@@ -173,28 +178,25 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
                 onBackPressed();
                 break;
 
-            case R.id.action_star:
-
-                boolean stared = mContact.isStared();
-                mContact.setStared(!stared);
-
-                if (mPresenter != null) {
-                    mPresenter.update(mContact);
-                }
-
-                break;
             case R.id.action_edit:
-
+                Intent intent = new Intent(this, EditActivity.class);
+                intent.putExtra("CONTACT", mContact);
+                startActivity(intent);
                 break;
+
             case R.id.action_delete:
                 if (mPresenter != null) {
                     mPresenter.delete(mContact);
                 }
                 break;
+
             case R.id.action_share:
                 if (mPresenter != null) {
                     mPresenter.share(mContact);
                 }
+                break;
+
+            default:
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -237,7 +239,12 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
 
     @Override
     public void onUpdate() {
-        invalidateOptionsMenu();
+        updateFab();
+    }
+
+    private void updateFab() {
+        boolean stared = mContact.isStared();
+        mFab.setImageDrawable(stared ? star : unStar);
     }
 
     @DebugLog
@@ -246,6 +253,7 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
         onBackPressed();
     }
 
+    @DebugLog
     @Override
     public void showRecord(List<History> histories) {
         mHistories.clear();
@@ -365,7 +373,7 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
 
             @Override
             public void onClick(View v) {
-                ((DetailActivity)mActivity).call();
+                ((DetailActivity) mActivity).call();
             }
         }
 
@@ -384,7 +392,7 @@ public class DetailActivity extends AppCompatActivity implements DetailContract.
 
             @Override
             public void onClick(View v) {
-                ((DetailActivity)mActivity).call();
+                ((DetailActivity) mActivity).call();
             }
         }
     }

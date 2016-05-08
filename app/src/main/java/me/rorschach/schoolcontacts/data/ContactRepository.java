@@ -1,6 +1,5 @@
 package me.rorschach.schoolcontacts.data;
 
-import com.raizlabs.android.dbflow.runtime.TransactionManager;
 import com.raizlabs.android.dbflow.runtime.transaction.process.ProcessModelInfo;
 import com.raizlabs.android.dbflow.runtime.transaction.process.SaveModelTransaction;
 import com.raizlabs.android.dbflow.sql.language.Condition;
@@ -76,14 +75,12 @@ public class ContactRepository implements Repository<Contact> {
     @DebugLog
     public void saveAll(List<Contact> contacts) {
 
-//        for (Contact contact : contacts) {
-//            contact.save();
-//        }
+        new SaveModelTransaction<>(ProcessModelInfo.withModels(contacts)).onExecute();
 
-        TransactionManager.getInstance()
-                .addTransaction(
-                        new SaveModelTransaction<>(
-                                ProcessModelInfo.withModels(contacts)));
+//        TransactionManager.getInstance()
+//                .addTransaction(
+//                        new SaveModelTransaction<>(
+//                                ProcessModelInfo.withModels(contacts)));
     }
 
     public List<Contact> loadAllColleges() {
